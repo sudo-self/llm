@@ -1,37 +1,47 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ai.jessejesse.com</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-      /* Custom styles for scrollbar and animations */
-      .chat-messages::-webkit-scrollbar {
-        width: 6px;
-      }
-      .chat-messages::-webkit-scrollbar-track {
-        background: #1f2937;
-      }
-      .chat-messages::-webkit-scrollbar-thumb {
-        background: #4b5563;
-        border-radius: 3px;
-      }
-      .chat-messages::-webkit-scrollbar-thumb:hover {
-        background: #6b7280;
-      }
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      .message-animation {
-        animation: fadeIn 0.3s ease-out;
-      }
-    </style>
-  </head>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <!-- icons -->
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+
+  <title>ai.jessejesse.com</title>
+
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+
+    .chat-messages::-webkit-scrollbar {
+      width: 6px;
+    }
+    .chat-messages::-webkit-scrollbar-track {
+      background: #1f2937;
+    }
+    .chat-messages::-webkit-scrollbar-thumb {
+      background: #4b5563;
+      border-radius: 3px;
+    }
+    .chat-messages::-webkit-scrollbar-thumb:hover {
+      background: #6b7280;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .message-animation {
+      animation: fadeIn 0.3s ease-out;
+    }
+  </style>
+</head>
+
   <body class="bg-gray-900 text-gray-200 min-h-screen flex flex-col">
     <header class="bg-gray-800 border-b border-gray-700 py-4 px-4 flex justify-between items-center">
       <div class="max-w-3xl mx-auto text-center flex-1">
