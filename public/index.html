@@ -13,38 +13,37 @@
       .chat-messages::-webkit-scrollbar {
         width: 6px;
       }
-      
       .chat-messages::-webkit-scrollbar-track {
         background: #1f2937;
       }
-      
       .chat-messages::-webkit-scrollbar-thumb {
         background: #4b5563;
         border-radius: 3px;
       }
-      
       .chat-messages::-webkit-scrollbar-thumb:hover {
         background: #6b7280;
       }
-      
       @keyframes fadeIn {
         from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }
       }
-      
       .message-animation {
         animation: fadeIn 0.3s ease-out;
       }
     </style>
   </head>
   <body class="bg-gray-900 text-gray-200 min-h-screen flex flex-col">
-    <header class="bg-gray-800 border-b border-gray-700 py-4 px-4">
-      <div class="max-w-3xl mx-auto text-center">
+    <header class="bg-gray-800 border-b border-gray-700 py-4 px-4 flex justify-between items-center">
+      <div class="max-w-3xl mx-auto text-center flex-1">
         <h1 class="text-2xl font-bold text-orange-500">
           <i class="fas fa-robot mr-2"></i>Cloudflare AI Chat
         </h1>
         <p class="text-gray-400 mt-1">Powered by Cloudflare Workers AI</p>
       </div>
+      <!-- Toggle Button -->
+      <button id="theme-toggle" class="ml-4 text-gray-400 hover:text-orange-500">
+        <i class="fas fa-moon"></i>
+      </button>
     </header>
 
     <main class="flex-1 flex flex-col max-w-3xl mx-auto w-full p-4">
@@ -56,7 +55,7 @@
             </div>
             <div class="bg-gray-800 rounded-2xl rounded-tl-none px-4 py-3 max-w-[85%]">
               <p class="text-gray-200">
-                Hello! I'm an LLM chat app powered by Cloudflare Workers AI. How can I help you today?
+                Hello! I'm an LLM Cloudflare AI model. How can I help you today?
               </p>
             </div>
           </div>
@@ -94,11 +93,45 @@
 
     <footer class="bg-gray-800 border-t border-gray-700 py-3 px-4 mt-4">
       <div class="max-w-3xl mx-auto text-center text-gray-400 text-sm">
-        <p>Cloudflare Workers AI Chat Template &copy; 2025</p>
+        <p>llm.JesseJesse.workers.dev &copy; 2025</p>
       </div>
     </footer>
 
-    <!-- Your original chat.js script -->
+
     <script src="chat.js"></script>
+
+
+    <script>
+      const body = document.body;
+      const toggleBtn = document.getElementById('theme-toggle');
+      const icon = toggleBtn.querySelector('i');
+
+      function setTheme(dark) {
+        if (dark) {
+          body.classList.remove('bg-white', 'text-gray-900');
+          body.classList.add('bg-gray-900', 'text-gray-200');
+          icon.classList.remove('fa-sun');
+          icon.classList.add('fa-moon');
+          localStorage.setItem('theme', 'dark');
+        } else {
+          body.classList.remove('bg-gray-900', 'text-gray-200');
+          body.classList.add('bg-white', 'text-gray-900');
+          icon.classList.remove('fa-moon');
+          icon.classList.add('fa-sun');
+          localStorage.setItem('theme', 'light');
+        }
+      }
+
+      toggleBtn.addEventListener('click', () => {
+        const dark = body.classList.contains('bg-gray-900');
+        setTheme(!dark);
+      });
+
+   
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'light') setTheme(false);
+      else setTheme(true); 
+    </script>
   </body>
 </html>
+
