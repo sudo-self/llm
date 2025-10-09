@@ -31,31 +31,24 @@
         background: #6b7280;
       }
       @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
       }
       .message-animation {
         animation: fadeIn 0.3s ease-out;
       }
       @media (max-width: 640px) {
-        .message-input {
-          padding: 12px;
-        }
-        #user-input {
-          font-size: 16px;
-        }
+        .message-input { padding: 12px; }
+        #user-input { font-size: 16px; }
       }
       button:focus-visible,
       textarea:focus-visible {
         outline: 2px solid #f97316;
         outline-offset: 2px;
       }
+
+      /* NEW: User message text color */
+      .user-message { color: #f97316; } /* Tailwind orange-500 */
     </style>
   </head>
 
@@ -118,14 +111,8 @@
             <span>AI is thinking</span>
             <div class="flex ml-2 space-x-1">
               <div class="h-1 w-1 bg-gray-400 rounded-full animate-pulse"></div>
-              <div
-                class="h-1 w-1 bg-gray-400 rounded-full animate-pulse"
-                style="animation-delay: 0.2s"
-              ></div>
-              <div
-                class="h-1 w-1 bg-gray-400 rounded-full animate-pulse"
-                style="animation-delay: 0.4s"
-              ></div>
+              <div class="h-1 w-1 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
+              <div class="h-1 w-1 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.4s"></div>
             </div>
           </div>
         </div>
@@ -138,7 +125,7 @@
             placeholder="Type your message here..."
             rows="1"
             aria-label="Type your message"
-            class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-orange-500 placeholder-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+            class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
             autofocus
           ></textarea>
           <button
@@ -155,9 +142,7 @@
     <footer class="bg-gray-800 border-t border-gray-700 py-3 px-4 mt-4">
       <div class="max-w-3xl mx-auto text-center text-orange-500 text-sm">
         <p>
-          <a href="https://ai.jessejesse.com"
-            >ai.jessejesse.com&nbsp;&copy;2023</a
-          >
+          <a href="https://ai.jessejesse.com">ai.jessejesse.com&nbsp;&copy;2023</a>
         </p>
       </div>
     </footer>
@@ -193,8 +178,12 @@
       const savedTheme = localStorage.getItem("theme");
       if (savedTheme === "light") setTheme(false);
       else setTheme(true);
+
+      // applying orange to user messages dynamically in chat.js:
+      
     </script>
   </body>
 </html>
+
 
 
