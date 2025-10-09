@@ -1,98 +1,150 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <!-- icons -->
-  <link rel="icon" href="/favicon.ico" sizes="any">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-  <link rel="manifest" href="/manifest.json">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>ai.jessejesse.com</title>
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
 
+    <title>ai.jessejesse.com</title>
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <style>
-
-    .chat-messages::-webkit-scrollbar {
-      width: 6px;
-    }
-    .chat-messages::-webkit-scrollbar-track {
-      background: #1f2937;
-    }
-    .chat-messages::-webkit-scrollbar-thumb {
-      background: #4b5563;
-      border-radius: 3px;
-    }
-    .chat-messages::-webkit-scrollbar-thumb:hover {
-      background: #6b7280;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .message-animation {
-      animation: fadeIn 0.3s ease-out;
-    }
-  </style>
-</head>
+    <style>
+      .chat-messages::-webkit-scrollbar {
+        width: 6px;
+      }
+      .chat-messages::-webkit-scrollbar-track {
+        background: #1f2937;
+      }
+      .chat-messages::-webkit-scrollbar-thumb {
+        background: #4b5563;
+        border-radius: 3px;
+      }
+      .chat-messages::-webkit-scrollbar-thumb:hover {
+        background: #6b7280;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .message-animation {
+        animation: fadeIn 0.3s ease-out;
+      }
+      @media (max-width: 640px) {
+        .message-input {
+          padding: 12px;
+        }
+        #user-input {
+          font-size: 16px;
+        }
+      }
+      button:focus-visible,
+      textarea:focus-visible {
+        outline: 2px solid #f97316;
+        outline-offset: 2px;
+      }
+    </style>
+  </head>
 
   <body class="bg-gray-900 text-gray-200 min-h-screen flex flex-col">
-    <header class="bg-gray-800 border-b border-gray-700 py-4 px-4 flex justify-between items-center">
+    <header
+      class="bg-gray-800 border-b border-gray-700 py-4 px-4 flex justify-between items-center"
+    >
       <div class="max-w-3xl mx-auto text-center flex-1">
         <h1 class="text-2xl font-bold text-orange-500">
           <i class="fas fa-robot mr-2"></i>Cloudflare Workers AI
         </h1>
         <p class="text-gray-400 mt-1">Powered by ai.jessejesse.com</p>
       </div>
-      <button id="theme-toggle" class="ml-4 text-gray-400 hover:text-orange-500">
+      <button
+        id="theme-toggle"
+        class="ml-4 text-gray-400 hover:text-orange-500"
+        aria-label="Toggle dark/light mode"
+      >
         <i class="fas fa-moon"></i>
       </button>
     </header>
 
-    <main class="flex-1 flex flex-col max-w-3xl mx-auto w-full p-4">
-      <div class="chat-container flex-1 flex flex-col border border-gray-700 rounded-xl overflow-hidden bg-gray-800">
-        <div id="chat-messages" class="chat-messages flex-1 overflow-y-auto p-4 bg-gray-900 space-y-4">
+    <main class="flex-1 flex flex-col max-w-3xl mx-auto w-full p-4" role="main">
+      <div
+        class="chat-container flex-1 flex flex-col border border-gray-700 rounded-xl overflow-hidden bg-gray-800"
+        role="log"
+        aria-live="polite"
+        aria-label="Chat messages"
+      >
+        <div
+          id="chat-messages"
+          class="chat-messages flex-1 overflow-y-auto p-4 bg-gray-900 space-y-4"
+        >
           <div class="message-animation flex items-start space-x-3">
             <div class="bg-gray-700 rounded-full p-2 flex-shrink-0">
               <i class="fas fa-robot text-orange-500"></i>
             </div>
-            <div class="bg-gray-800 rounded-2xl rounded-tl-none px-4 py-3 max-w-[85%]">
-              <p class="text-gray-200">
-                Welcome to ai.jessejesse.com!
-              </p>
+            <div
+              class="bg-gray-800 rounded-2xl rounded-tl-none px-4 py-3 max-w-[85%]"
+            >
+              <p class="text-gray-200">Welcome to ai.jessejesse.com!</p>
             </div>
           </div>
         </div>
 
-        <div class="typing-indicator hidden bg-gray-800 px-4 py-2 border-t border-gray-700" id="typing-indicator">
+        <div
+          id="error-message"
+          class="hidden bg-red-900 border border-red-700 text-red-200 p-3 mx-4 mt-2 rounded-lg"
+        >
+          <i class="fas fa-exclamation-triangle mr-2"></i>
+          <span id="error-text">Failed to send message. Please try again.</span>
+        </div>
+
+        <div
+          class="typing-indicator hidden bg-gray-800 px-4 py-2 border-t border-gray-700"
+          id="typing-indicator"
+        >
           <div class="flex items-center text-gray-400">
             <i class="fas fa-robot text-orange-500 mr-2"></i>
             <span>AI is thinking</span>
             <div class="flex ml-2 space-x-1">
               <div class="h-1 w-1 bg-gray-400 rounded-full animate-pulse"></div>
-              <div class="h-1 w-1 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
-              <div class="h-1 w-1 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.4s"></div>
+              <div
+                class="h-1 w-1 bg-gray-400 rounded-full animate-pulse"
+                style="animation-delay: 0.2s"
+              ></div>
+              <div
+                class="h-1 w-1 bg-gray-400 rounded-full animate-pulse"
+                style="animation-delay: 0.4s"
+              ></div>
             </div>
           </div>
         </div>
 
-        <div class="message-input flex p-4 border-t border-gray-700 bg-gray-800">
+        <div
+          class="message-input flex p-4 border-t border-gray-700 bg-gray-800"
+        >
           <textarea
             id="user-input"
             placeholder="Type your message here..."
             rows="1"
+            aria-label="Type your message"
             class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
             autofocus
           ></textarea>
-          <button 
-            id="send-button" 
-            class="ml-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-6 transition-colors flex items-center justify-center"
+          <button
+            id="send-button"
+            class="ml-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-6 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Send message"
           >
             <i class="fas fa-paper-plane"></i>
           </button>
@@ -100,48 +152,47 @@
       </div>
     </main>
 
-   <footer class="bg-gray-800 border-t border-gray-700 py-3 px-4 mt-4">
-  <div class="max-w-3xl mx-auto text-center text-orange-500 text-sm">
-    <p>
-      <a href="https://ai.jessejesse.com">ai.jessejesse.com&nbsp;&copy2023</a>
-    </p>
-  </div>
-</footer>
-
+    <footer class="bg-gray-800 border-t border-gray-700 py-3 px-4 mt-4">
+      <div class="max-w-3xl mx-auto text-center text-orange-500 text-sm">
+        <p>
+          <a href="https://ai.jessejesse.com"
+            >ai.jessejesse.com&nbsp;&copy2023</a
+          >
+        </p>
+      </div>
+    </footer>
 
     <script src="chat.js"></script>
 
-
     <script>
       const body = document.body;
-      const toggleBtn = document.getElementById('theme-toggle');
-      const icon = toggleBtn.querySelector('i');
+      const toggleBtn = document.getElementById("theme-toggle");
+      const icon = toggleBtn.querySelector("i");
 
       function setTheme(dark) {
         if (dark) {
-          body.classList.remove('bg-white', 'text-gray-900');
-          body.classList.add('bg-gray-900', 'text-gray-200');
-          icon.classList.remove('fa-sun');
-          icon.classList.add('fa-moon');
-          localStorage.setItem('theme', 'dark');
+          body.classList.remove("bg-white", "text-gray-900");
+          body.classList.add("bg-gray-900", "text-gray-200");
+          icon.classList.remove("fa-sun");
+          icon.classList.add("fa-moon");
+          localStorage.setItem("theme", "dark");
         } else {
-          body.classList.remove('bg-gray-900', 'text-gray-200');
-          body.classList.add('bg-white', 'text-gray-900');
-          icon.classList.remove('fa-moon');
-          icon.classList.add('fa-sun');
-          localStorage.setItem('theme', 'light');
+          body.classList.remove("bg-gray-900", "text-gray-200");
+          body.classList.add("bg-white", "text-gray-900");
+          icon.classList.remove("fa-moon");
+          icon.classList.add("fa-sun");
+          localStorage.setItem("theme", "light");
         }
       }
 
-      toggleBtn.addEventListener('click', () => {
-        const dark = body.classList.contains('bg-gray-900');
+      toggleBtn.addEventListener("click", () => {
+        const dark = body.classList.contains("bg-gray-900");
         setTheme(!dark);
       });
 
-   
-      const savedTheme = localStorage.getItem('theme');
-      if (savedTheme === 'light') setTheme(false);
-      else setTheme(true); 
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme === "light") setTheme(false);
+      else setTheme(true);
     </script>
   </body>
 </html>
