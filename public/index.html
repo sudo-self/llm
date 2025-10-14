@@ -25,6 +25,47 @@
       .message-animation { animation: fadeIn 0.3s ease-out; }
       @media (max-width: 640px) { .message-input { padding: 12px; } #user-input { font-size: 16px; } }
       button:focus-visible, textarea:focus-visible { outline: 2px solid #f97316; outline-offset: 2px; }
+
+      /* ---------- LIGHT MODE OVERRIDES ---------- */
+      body.light-mode {
+        background-color: #ffffff;
+        color: #111827; /* gray-900 */
+      }
+
+      body.light-mode header,
+      body.light-mode footer,
+      body.light-mode .chat-container,
+      body.light-mode .message-input,
+      body.light-mode #typing-indicator {
+        background-color: #f9fafb; /* gray-50 */
+        border-color: #e5e7eb;    /* gray-200 */
+      }
+
+      body.light-mode #chat-messages {
+        background-color: #ffffff;
+      }
+
+      body.light-mode textarea {
+        background-color: #f3f4f6; /* gray-100 */
+        color: #111827;
+        border-color: #d1d5db;    /* gray-300 */
+      }
+
+      body.light-mode .message-input button {
+        background-color: #f59e0b; /* amber-500 */
+      }
+
+      body.light-mode .ai-message,
+      body.light-mode .bg-gray-800 {
+        background-color: #f3f4f6 !important;
+        color: #111827 !important;
+      }
+
+      body.light-mode .user-message,
+      body.light-mode .bg-orange-500 {
+        background-color: #fbbf24 !important;
+        color: #1f2937 !important;
+      }
     </style>
   </head>
 
@@ -49,7 +90,7 @@
       <div class="chat-container flex-1 flex flex-col border border-gray-700 rounded-xl overflow-hidden bg-gray-800"
            role="log" aria-live="polite" aria-label="Chat messages">
         <div id="chat-messages" class="chat-messages flex-1 overflow-y-auto p-4 bg-gray-900 space-y-4">
-          <div class="message-animation flex items-start space-x-3">
+          <div class="message-animation flex items-start space-x-3 ai-message">
             <div class="bg-gray-700 rounded-full p-2 flex-shrink-0">
               <i class="fas fa-robot text-orange-500"></i>
             </div>
@@ -95,37 +136,33 @@
       </div>
     </footer>
 
-    <script src="chat.js"></script>
-
     <script>
-      // THEME TOGGLE
+      // THEME TOGGLE (light-mode class instead of class juggling)
       const body = document.body;
       const toggleBtn = document.getElementById("theme-toggle");
       const icon = toggleBtn.querySelector("i");
 
-      function setTheme(dark) {
-        if (dark) {
-          body.classList.remove("bg-white", "text-gray-900");
-          body.classList.add("bg-gray-900", "text-gray-200");
-          icon.classList.remove("fa-sun");
-          icon.classList.add("fa-moon");
-          localStorage.setItem("theme", "dark");
-        } else {
-          body.classList.remove("bg-gray-900", "text-gray-200");
-          body.classList.add("bg-white", "text-gray-900");
+      function applyTheme(light) {
+        if (light) {
+          body.classList.add("light-mode");
           icon.classList.remove("fa-moon");
           icon.classList.add("fa-sun");
           localStorage.setItem("theme", "light");
+        } else {
+          body.classList.remove("light-mode");
+          icon.classList.remove("fa-sun");
+          icon.classList.add("fa-moon");
+          localStorage.setItem("theme", "dark");
         }
       }
 
       toggleBtn.addEventListener("click", () => {
-        setTheme(!body.classList.contains("bg-gray-900"));
+        applyTheme(!body.classList.contains("light-mode"));
       });
 
+      // Initialize
       const savedTheme = localStorage.getItem("theme");
-      if (savedTheme === "light") setTheme(false);
-      else setTheme(true);
+      applyTheme(savedTheme === "light");
 
       // CHAT FUNCTIONALITY
       const chatMessages = document.getElementById("chat-messages");
@@ -141,7 +178,7 @@
           <div class="bg-gray-700 rounded-full p-2 flex-shrink-0">
             <i class="fas fa-${isUser ? "user" : "robot"} ${isUser ? "text-white" : "text-orange-500"}"></i>
           </div>
-          <div class="${isUser ? "bg-orange-500 text-white" : "bg-gray-800 text-gray-200"} rounded-2xl px-4 py-3 max-w-[85%] ${isUser ? "rounded-tr-none" : "rounded-tl-none"}">
+          <div class="${isUser ? "user-message bg-orange-500 text-white" : "ai-message bg-gray-800 text-gray-200"} rounded-2xl px-4 py-3 max-w-[85%] ${isUser ? "rounded-tr-none" : "rounded-tl-none"}">
             <p>${text}</p>
           </div>
         `;
@@ -164,7 +201,6 @@
             const response = await window.sendToLMStudio(message);
             addMessage(response, false);
           } else {
-            // fallback placeholder
             await new Promise(r => setTimeout(r, 500));
             addMessage("AI response placeholder...", false);
           }
@@ -188,6 +224,7 @@
     </script>
   </body>
 </html>
+
 
 
 
