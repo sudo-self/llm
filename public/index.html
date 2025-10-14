@@ -1,5 +1,3 @@
-
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -19,120 +17,56 @@
   />
 
   <style>
-    html, body { 
-      height: 100%; 
-      transition: background-color 0.3s ease, color 0.3s ease;
-    }
+    html, body { height: 100%; transition: background-color 0.3s, color 0.3s; }
     .chat-container::-webkit-scrollbar { width: 6px; }
     .chat-container::-webkit-scrollbar-track { background: #1f2937; }
     .chat-container::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
     .chat-container::-webkit-scrollbar-thumb:hover { background: #6b7280; }
 
-    body.light-mode .chat-container::-webkit-scrollbar-track { background: #e5e7eb; }
-    body.light-mode .chat-container::-webkit-scrollbar-thumb { background: #9ca3af; }
-    body.light-mode .chat-container::-webkit-scrollbar-thumb:hover { background: #6b7280; }
-
-    @keyframes fadeIn { 
-      from { opacity: 0; transform: translateY(10px); } 
-      to { opacity: 1; transform: translateY(0); } 
-    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .message-animation { animation: fadeIn 0.25s ease-out; }
 
-    .ai-message { 
-      background-color: #1f2937; 
-      color: #f97316; 
-      border-radius: 1rem 1rem 1rem 0; 
-      transition: background-color 0.3s ease, color 0.3s ease;
-    }
-    .user-message { 
-      background-color: #f97316; 
-      color: #fff; 
-      border-radius: 1rem 1rem 0 1rem; 
-      transition: background-color 0.3s ease, color 0.3s ease;
-    }
+    .ai-message { background-color: #1f2937; color: #f97316; border-radius: 1rem 1rem 1rem 0; }
+    .user-message { background-color: #f97316; color: #fff; border-radius: 1rem 1rem 0 1rem; }
 
     textarea:focus { outline: none; }
     @media (max-width: 640px) { #user-input { font-size: 16px; } }
 
-    body.light-mode {
-      background-color: #ffffff; 
-      color: #111827;
-    }
-    body.light-mode header {
-      background-color: #f3f4f6;
-      border-color: #e5e7eb;
-    }
-    body.light-mode footer {
-      background-color: #f3f4f6;
-      border-color: #e5e7eb;
-    }
-    body.light-mode .chat-container { 
-      background-color: #f9fafb; 
-      border-color: #e5e7eb; 
-    }
-    body.light-mode .ai-message { 
-      background-color: #f3f4f6; 
-      color: #111827; 
-    }
-    body.light-mode .user-message { 
-      background-color: #fbbf24; 
-      color: #1f2937; 
-    }
-    body.light-mode textarea { 
-      background-color: #f3f4f6; 
-      color: #111827; 
-      border-color: #d1d5db; 
-    }
-    body.light-mode .message-input button { 
-      background-color: #f59e0b; 
-    }
-    body.light-mode .message-input button:hover { 
-      background-color: #d97706; 
-    }
+    body.light-mode { background-color: #ffffff; color: #111827; }
+    body.light-mode header, body.light-mode footer { background-color: #f3f4f6; border-color: #e5e7eb; }
+    body.light-mode .chat-container { background-color: #f9fafb; border-color: #e5e7eb; }
+    body.light-mode .ai-message { background-color: #f3f4f6; color: #111827; }
+    body.light-mode .user-message { background-color: #fbbf24; color: #1f2937; }
+    body.light-mode textarea { background-color: #f3f4f6; color: #111827; border-color: #d1d5db; }
+    body.light-mode .message-input button { background-color: #f59e0b; }
+    body.light-mode .message-input button:hover { background-color: #d97706; }
     
-    /* Theme toggle button styles */
-    #theme-toggle {
-      transition: transform 0.3s ease, color 0.3s ease;
-    }
-    #theme-toggle:hover {
-      transform: scale(1.1);
-    }
+    #theme-toggle { transition: transform 0.3s, color 0.3s; }
+    #theme-toggle:hover { transform: scale(1.1); }
     
-    /* Smooth transitions for all elements */
-    header, footer, .chat-container, .ai-message, .user-message, textarea, button {
-      transition: all 0.3s ease;
-    }
+    header, footer, .chat-container, .ai-message, .user-message, textarea, button { transition: all 0.3s ease; }
   </style>
 </head>
 
 <body class="bg-gray-900 text-gray-200 flex flex-col min-h-screen">
 
-<header class="bg-gray-800 border-b border-gray-700 py-4 px-4 flex justify-between items-center transition-colors duration-300">
+<header class="bg-gray-800 border-b border-gray-700 py-4 px-4 flex justify-between items-center">
   <div class="max-w-3xl mx-auto text-center flex-1">
-    <h1 class="text-2xl font-bold text-orange-500 transition-colors duration-300">
+    <h1 class="text-2xl font-bold text-orange-500">
       <i class="fas fa-robot mr-2"></i>Cloudflare Workers AI
     </h1>
-    <p class="text-gray-400 mt-1 transition-colors duration-300">Meta/LLaMa-3.3 70B Instruct Fast</p>
+    <p class="text-gray-400 mt-1">Meta/LLaMa-3.3 70B Instruct Fast</p>
   </div>
-  <button id="theme-toggle" class="ml-4 text-gray-400 hover:text-orange-500 transition-all duration-300" aria-label="Toggle theme">
+  <button id="theme-toggle" class="ml-4 text-gray-400 hover:text-orange-500" aria-label="Toggle theme">
     <i class="fas fa-moon"></i>
   </button>
 </header>
 
 <main class="flex-1 flex flex-col max-w-3xl w-full mx-auto p-4">
-  <div class="chat-container flex-1 flex flex-col border border-gray-700 rounded-xl overflow-hidden transition-colors duration-300">
-    <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4">
-      <div class="message-animation flex items-start space-x-3 ai-message p-3">
-        <div class="bg-gray-700 rounded-full p-2 flex-shrink-0 transition-colors duration-300">
-          <i class="fas fa-robot text-orange-500"></i>
-        </div>
-        <div class="px-4 py-2 max-w-[85%] rounded-2xl rounded-tl-none">
-          <p>Welcome to ai.jessejesse.com!</p>
-        </div>
-      </div>
-    </div>
+  <div class="chat-container flex-1 flex flex-col border border-gray-700 rounded-xl overflow-hidden">
+    <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
 
-    <div id="typing-indicator" class="hidden flex items-center p-3 border-t border-gray-700 text-gray-400 transition-colors duration-300">
+    <div id="typing-indicator" class="hidden flex items-center p-3 border-t border-gray-700 text-gray-400">
       <i class="fas fa-robot text-orange-500 mr-2"></i>
       <span>AI is typing</span>
       <div class="flex ml-2 space-x-1">
@@ -142,132 +76,115 @@
       </div>
     </div>
 
-    <div class="message-input flex p-4 border-t border-gray-700 transition-colors duration-300">
+    <div class="message-input flex p-4 border-t border-gray-700">
       <textarea id="user-input" placeholder="Type a message..." rows="1"
-                class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-gray-200 placeholder-gray-400 resize-none transition-colors duration-300"
+                class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-gray-200 placeholder-gray-400 resize-none"
                 autofocus></textarea>
       <button id="send-button"
-              class="ml-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-6 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-300">
+              class="ml-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-6 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
         <i class="fas fa-paper-plane"></i>
       </button>
     </div>
   </div>
 </main>
 
-<footer class="bg-gray-800 border-t border-gray-700 py-3 px-4 mt-4 text-center text-orange-500 text-sm transition-colors duration-300">
-  <p><a href="https://ai.jessejesse.com" class="transition-colors duration-300">ai.jessejesse.com &copy; 2025</a></p>
+<footer class="bg-gray-800 border-t border-gray-700 py-3 px-4 mt-4 text-center text-orange-500 text-sm">
+  <p><a href="https://ai.jessejesse.com">ai.jessejesse.com &copy; 2025</a></p>
 </footer>
 
+<!-- Real AI integration -->
+<script src="/chat.js" defer></script>
 <script>
-  // Theme toggle functionality
-  document.addEventListener('DOMContentLoaded', function() {
-    const themeToggle = document.getElementById('theme-toggle');
-    const themeIcon = themeToggle.querySelector('i');
-    
-    // Check for saved theme preference or default to dark
-    const currentTheme = localStorage.getItem('theme') || 'dark';
-    
-    // Apply the saved theme
-    if (currentTheme === 'light') {
-      document.body.classList.add('light-mode');
-      themeIcon.classList.remove('fa-moon');
-      themeIcon.classList.add('fa-sun');
-    }
-    
-    // Toggle theme on button click
-    themeToggle.addEventListener('click', function() {
-      if (document.body.classList.contains('light-mode')) {
-        // Switch to dark mode
-        document.body.classList.remove('light-mode');
-        themeIcon.classList.remove('fa-sun');
-        themeIcon.classList.add('fa-moon');
-        localStorage.setItem('theme', 'dark');
-      } else {
-        // Switch to light mode
-        document.body.classList.add('light-mode');
-        themeIcon.classList.remove('fa-moon');
-        themeIcon.classList.add('fa-sun');
-        localStorage.setItem('theme', 'light');
-      }
-    });
-    
-    // Chat functionality (placeholder for your existing chat.js)
-    const userInput = document.getElementById('user-input');
-    const sendButton = document.getElementById('send-button');
-    const chatMessages = document.getElementById('chat-messages');
-    const typingIndicator = document.getElementById('typing-indicator');
-    
-    // Auto-resize textarea
-    userInput.addEventListener('input', function() {
-      this.style.height = 'auto';
-      this.style.height = (this.scrollHeight) + 'px';
-    });
-    
-    // Send message on button click
-    sendButton.addEventListener('click', sendMessage);
-    
-    // Send message on Enter key (but allow Shift+Enter for new line)
-    userInput.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-      }
-    });
-    
-    function sendMessage() {
-      const message = userInput.value.trim();
-      if (!message) return;
-      
-      // Add user message to chat
-      addMessage(message, 'user');
-      
-      // Clear input and reset height
-      userInput.value = '';
-      userInput.style.height = 'auto';
-      
-      // Show typing indicator
-      typingIndicator.classList.remove('hidden');
-      
-      // Simulate AI response (replace with actual API call)
-      setTimeout(() => {
-        typingIndicator.classList.add('hidden');
-        addMessage("This is a simulated response. In a real implementation, this would come from the AI API.", 'ai');
-      }, 1500);
-    }
-    
-    function addMessage(text, sender) {
-      const messageDiv = document.createElement('div');
-      messageDiv.classList.add('message-animation', 'flex', 'items-start', 'space-x-3', 'p-3');
-      
-      if (sender === 'user') {
-        messageDiv.classList.add('user-message', 'justify-end');
-        messageDiv.innerHTML = `
-          <div class="px-4 py-2 max-w-[85%] rounded-2xl rounded-tr-none">
-            <p>${text}</p>
-          </div>
-          <div class="bg-orange-500 rounded-full p-2 flex-shrink-0">
-            <i class="fas fa-user text-white"></i>
-          </div>
-        `;
-      } else {
-        messageDiv.classList.add('ai-message');
-        messageDiv.innerHTML = `
-          <div class="bg-gray-700 rounded-full p-2 flex-shrink-0">
-            <i class="fas fa-robot text-orange-500"></i>
-          </div>
-          <div class="px-4 py-2 max-w-[85%] rounded-2xl rounded-tl-none">
-            <p>${text}</p>
-          </div>
-        `;
-      }
-      
-      chatMessages.appendChild(messageDiv);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
+document.addEventListener('DOMContentLoaded', () => {
+  const themeToggle = document.getElementById('theme-toggle');
+  const themeIcon = themeToggle.querySelector('i');
+  const userInput = document.getElementById('user-input');
+  const sendButton = document.getElementById('send-button');
+  const chatMessages = document.getElementById('chat-messages');
+  const typingIndicator = document.getElementById('typing-indicator');
+
+  // Theme toggle
+  const currentTheme = localStorage.getItem('theme') || 'dark';
+  if (currentTheme === 'light') document.body.classList.add('light-mode');
+
+  themeToggle.addEventListener('click', () => {
+    const isLight = document.body.classList.toggle('light-mode');
+    themeIcon.classList.toggle('fa-moon', !isLight);
+    themeIcon.classList.toggle('fa-sun', isLight);
+    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  });
+
+  // Auto-resize textarea
+  userInput.addEventListener('input', () => {
+    userInput.style.height = 'auto';
+    userInput.style.height = userInput.scrollHeight + 'px';
+  });
+
+  // Send message
+  sendButton.addEventListener('click', sendMessage);
+  userInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
     }
   });
+
+  function sendMessage() {
+    const text = userInput.value.trim();
+    if (!text) return;
+
+    addMessage(text, 'user');
+    userInput.value = '';
+    userInput.style.height = 'auto';
+    typingIndicator.classList.remove('hidden');
+
+    // Call your actual chat.js AI function
+    if (window.sendToAI) {
+      window.sendToAI(text).then(response => {
+        typingIndicator.classList.add('hidden');
+        addMessage(response, 'ai');
+      }).catch(err => {
+        typingIndicator.classList.add('hidden');
+        addMessage("⚠️ Error sending message.", 'ai');
+        console.error(err);
+      });
+    }
+  }
+
+  function addMessage(text, sender) {
+    const div = document.createElement('div');
+    div.classList.add('message-animation', 'flex', 'items-start', 'space-x-3', 'p-3');
+
+    if (sender === 'user') {
+      div.classList.add('justify-end', 'user-message');
+      div.innerHTML = `
+        <div class="px-4 py-2 max-w-[85%] rounded-2xl rounded-tr-none">
+          <p>${text}</p>
+        </div>
+        <div class="bg-orange-500 rounded-full p-2 flex-shrink-0">
+          <i class="fas fa-user text-white"></i>
+        </div>
+      `;
+    } else {
+      div.classList.add('ai-message');
+      div.innerHTML = `
+        <div class="bg-gray-700 rounded-full p-2 flex-shrink-0">
+          <i class="fas fa-robot text-orange-500"></i>
+        </div>
+        <div class="px-4 py-2 max-w-[85%] rounded-2xl rounded-tl-none">
+          <p>${text}</p>
+        </div>
+      `;
+    }
+
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+});
 </script>
 </body>
 </html>
+
 
 
 
