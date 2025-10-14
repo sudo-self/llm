@@ -23,9 +23,13 @@
     .chat-container::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
     .chat-container::-webkit-scrollbar-thumb:hover { background: #6b7280; }
 
-    .message { animation: fadeIn 0.25s ease-out; margin-bottom: 0.5rem; }
-    .user-message { background-color: #f97316; color: #fff; border-radius: 1rem 1rem 0 1rem; padding: 0.75rem 1rem; max-width: 85%; align-self: flex-end; }
-    .assistant-message { background-color: #1f2937; color: #f97316; border-radius: 1rem 1rem 1rem 0; padding: 0.75rem 1rem; max-width: 85%; align-self: flex-start; }
+    .message { animation: fadeIn 0.25s ease-out; margin-bottom: 0.5rem; display: flex; align-items: flex-start; gap: 0.75rem; }
+    .user-message { background-color: #f97316; color: #fff; border-radius: 1rem 1rem 0 1rem; padding: 0.75rem 1rem; max-width: 85%; margin-left: auto; display: flex; align-items: center; gap: 0.5rem; }
+    .assistant-message { background-color: #1f2937; color: #f97316; border-radius: 1rem 1rem 1rem 0; padding: 0.75rem 1rem; max-width: 85%; margin-right: auto; display: flex; align-items: center; gap: 0.5rem; }
+
+    .message .icon { flex-shrink: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background-color: #4b5563; color: #fff; }
+    .assistant-message .icon { background-color: #4b5563; color: #f97316; }
+    .user-message .icon { background-color: #f97316; color: #fff; }
 
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -35,6 +39,8 @@
     body.light-mode textarea { background-color: #f3f4f6; color: #111827; border-color: #d1d5db; }
     body.light-mode .message-input button { background-color: #f59e0b; }
     body.light-mode .message-input button:hover { background-color: #d97706; }
+    body.light-mode header { background-color: #f3f4f6; border-color: #e5e7eb; }
+    body.light-mode footer { background-color: #f3f4f6; border-color: #e5e7eb; }
 
     textarea { resize: none; }
     #theme-toggle { transition: transform 0.3s, color 0.3s; }
@@ -87,7 +93,6 @@
 </footer>
 
 <script>
-
   const themeToggle = document.getElementById('theme-toggle');
   const themeIcon = themeToggle.querySelector('i');
   const currentTheme = localStorage.getItem('theme') || 'dark';
@@ -104,6 +109,7 @@
 <script src="/chat.js" defer></script>
 </body>
 </html>
+
 
 
 
