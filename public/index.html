@@ -2,181 +2,223 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ai.jessejesse.com</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
 
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <style>
     body {
+      background-color: #1f2937;
+      color: #e5e7eb;
       min-height: 100vh;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    header {
+      background-color: #1f2937;
+      border-bottom: 1px solid #374151;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
       align-items: center;
-      padding: 20px;
-      transition: background 0.3s ease, color 0.3s ease;
     }
 
-    body.dark-mode {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      color: #eee;
+    header h1 {
+      font-size: 1.5rem;
+      color: #f97316;
+      display: flex;
+      align-items: center;
     }
 
-    body.light-mode {
-      background: #f5f5f5;
-      color: #111;
+    header h1 i {
+      margin-right: 0.5rem;
     }
 
-    .container {
-      width: 100%;
-      max-width: 800px;
-      height: 90vh;
-      background: #222831;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    main {
+      flex: 1;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
-      transition: background 0.3s ease, color 0.3s ease;
+      max-width: 3xl;
+      margin: 0 auto;
+      width: 100%;
+      padding: 1rem;
     }
-
-    body.light-mode .container {
-      background: #fff;
-      color: #111;
-    }
-
-    .header {
-      background: linear-gradient(90deg, #f97316 0%, #b45309 100%);
-      color: white;
-      padding: 16px;
-      text-align: center;
-      position: relative;
-    }
-
-    .header h1 { font-size: 20px; font-weight: 600; }
-    .theme-toggle {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      width: 36px;
-      height: 36px;
-      border: none;
-      border-radius: 50%;
-      cursor: pointer;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: rgba(255,255,255,0.2);
-      transition: background 0.3s ease;
-    }
-    .theme-toggle:hover { background: rgba(255,255,255,0.3); }
 
     .chat-container {
       flex: 1;
-      overflow-y: auto;
-      padding: 20px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      background: #222831;
-      transition: background 0.3s ease;
+      gap: 0.75rem;
+      border: 1px solid #374151;
+      border-radius: 0.75rem;
+      overflow-y: auto;
+      padding: 1rem;
+      background-color: #111827;
     }
-    body.light-mode .chat-container { background: #f0f0f0; }
 
     .message {
-      max-width: 75%;
-      padding: 12px 16px;
-      border-radius: 18px;
-      line-height: 1.4;
-      font-size: 15px;
-      animation: fadeIn 0.25s ease;
+      padding: 0.75rem 1rem;
+      border-radius: 1.25rem;
+      max-width: 85%;
       word-wrap: break-word;
+      animation: fadeIn 0.3s ease-out;
     }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
     .user-message {
+      background-color: #f97316;
+      color: white;
       align-self: flex-end;
-      background: #f97316;
-      color: #fff;
-      border-bottom-right-radius: 5px;
+      border-bottom-right-radius: 0.25rem;
     }
-    body.light-mode .user-message { background: #ffb570; color: #111; }
 
     .ai-message {
+      background-color: #374151;
+      color: #e5e7eb;
       align-self: flex-start;
-      background: #393e46;
-      color: #eee;
-      border-bottom-left-radius: 5px;
+      border-bottom-left-radius: 0.25rem;
     }
-    body.light-mode .ai-message { background: #e0e0e0; color: #111; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
     .input-container {
       display: flex;
-      gap: 10px;
-      padding: 16px;
-      border-top: 1px solid #393e46;
-      background: #222831;
-      transition: background 0.3s ease, border-color 0.3s ease;
+      gap: 0.5rem;
+      padding: 1rem;
+      border-top: 1px solid #374151;
+      background-color: #1f2937;
     }
-    body.light-mode .input-container { background: #fff; border-color: #ccc; }
 
     #user-input {
       flex: 1;
-      padding: 12px 16px;
-      border: 1px solid #393e46;
-      border-radius: 24px;
+      padding: 0.75rem 1rem;
+      border-radius: 1.5rem;
+      border: 1px solid #4b5563;
+      background-color: #111827;
+      color: #e5e7eb;
       outline: none;
-      font-size: 15px;
-      background: #393e46;
-      color: #eee;
-      transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
     }
-    body.light-mode #user-input { background: #fff; color: #111; border-color: #ccc; }
 
-    #user-input:focus { border-color: #f97316; }
+    #user-input::placeholder {
+      color: #9ca3af;
+    }
 
     #send-button {
-      width: 44px;
-      height: 44px;
-      border: none;
-      border-radius: 50%;
-      background: #f97316;
+      padding: 0.75rem 1.25rem;
+      border-radius: 1.5rem;
+      background-color: #f97316;
       color: white;
-      font-size: 18px;
+      font-weight: bold;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.3s ease;
+      transition: background 0.2s ease, transform 0.1s ease;
     }
-    #send-button:hover { background: #ea580c; }
-    body.light-mode #send-button { background: #f97316; color: #fff; }
+
+    #send-button:hover {
+      background-color: #ea580c;
+      transform: scale(1.05);
+    }
+
+    #send-button:disabled {
+      background-color: #9ca3af;
+      cursor: not-allowed;
+      transform: scale(1);
+    }
+
+    .typing-indicator {
+      display: none;
+      padding: 0.75rem 1rem;
+      border-radius: 1.25rem;
+      background-color: #374151;
+      color: #e5e7eb;
+      margin-bottom: 0.5rem;
+      align-self: flex-start;
+      display: flex;
+      gap: 0.25rem;
+      align-items: center;
+    }
+
+    .typing-indicator span {
+      display: block;
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 50%;
+      background-color: #9ca3af;
+      animation: typing 1s infinite;
+    }
+
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+
+    .theme-toggle {
+      background: none;
+      border: none;
+      color: #f97316;
+      font-size: 1.25rem;
+      cursor: pointer;
+    }
+
+    footer {
+      text-align: center;
+      padding: 0.5rem;
+      font-size: 0.875rem;
+      color: #f97316;
+      border-top: 1px solid #374151;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>ai.jessejesse.com</h1>
-      <button class="theme-toggle" id="theme-toggle">🌓</button>
+  <header>
+    <h1><i class="fas fa-robot"></i>Cloudflare Workers AI</h1>
+    <button class="theme-toggle" id="theme-toggle"><i class="fas fa-moon"></i></button>
+  </header>
+
+  <main>
+    <div id="chat-container" class="chat-container">
+      <div class="message ai-message">Welcome to ai.jessejesse.com!</div>
     </div>
-    <div id="chat-container" class="chat-container"></div>
+
+    <div id="typing-indicator" class="typing-indicator">
+      <span></span><span></span><span></span>
+      <span>AI is thinking...</span>
+    </div>
+
     <div class="input-container">
-      <input id="user-input" type="text" placeholder="Type your message..." autocomplete="off" />
-      <button id="send-button">➤</button>
+      <input type="text" id="user-input" placeholder="Type your message..." />
+      <button id="send-button">Send</button>
     </div>
-  </div>
+  </main>
+
+  <footer>
+    ai.jessejesse.com © 2025
+  </footer>
 
   <script src="chat.js"></script>
   <script>
     const body = document.body;
-    const toggleBtn = document.getElementById('theme-toggle');
-    const savedTheme = localStorage.getItem('theme');
+    const themeToggle = document.getElementById('theme-toggle');
+    const chatContainer = document.getElementById('chat-container');
+    const userInput = document.getElementById('user-input');
+    const sendButton = document.getElementById('send-button');
+    const typingIndicator = document.getElementById('typing-indicator');
 
-    // Load saved theme
-    if (savedTheme === 'light') body.classList.add('light-mode');
+    // Dark/light toggle
+    const savedTheme = localStorage.getItem('theme');
+    if(savedTheme === 'light') body.classList.add('light-mode');
     else body.classList.add('dark-mode');
 
-    toggleBtn.addEventListener('click', () => {
-      if (body.classList.contains('light-mode')) {
+    themeToggle.addEventListener('click', () => {
+      if(body.classList.contains('light-mode')) {
         body.classList.remove('light-mode');
         body.classList.add('dark-mode');
         localStorage.setItem('theme', 'dark');
@@ -186,9 +228,49 @@
         localStorage.setItem('theme', 'light');
       }
     });
+
+    function addMessage(text, isUser) {
+      const div = document.createElement('div');
+      div.classList.add('message', isUser ? 'user-message' : 'ai-message');
+      div.textContent = text;
+      chatContainer.appendChild(div);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const text = userInput.value.trim();
+      if(!text) return;
+
+      addMessage(text, true);
+      userInput.value = '';
+      sendButton.disabled = true;
+      typingIndicator.style.display = 'flex';
+
+      if(window.handleSendMessage) {
+        try {
+          await window.handleSendMessage(text);
+        } catch (err) {
+          console.error(err);
+          addMessage('Error: Could not send message.', false);
+        }
+      } else {
+        // fallback AI response
+        setTimeout(() => addMessage('AI response placeholder...', false), 500);
+      }
+
+      sendButton.disabled = false;
+      typingIndicator.style.display = 'none';
+      userInput.focus();
+    }
+
+    sendButton.addEventListener('click', sendMessage);
+    userInput.addEventListener('keypress', (e) => {
+      if(e.key === 'Enter') sendMessage();
+    });
   </script>
 </body>
 </html>
+
 
 
 
