@@ -23,28 +23,22 @@
     .chat-container::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
     .chat-container::-webkit-scrollbar-thumb:hover { background: #6b7280; }
 
+    .message { animation: fadeIn 0.25s ease-out; margin-bottom: 0.5rem; }
+    .user-message { background-color: #f97316; color: #fff; border-radius: 1rem 1rem 0 1rem; padding: 0.75rem 1rem; max-width: 85%; align-self: flex-end; }
+    .assistant-message { background-color: #1f2937; color: #f97316; border-radius: 1rem 1rem 1rem 0; padding: 0.75rem 1rem; max-width: 85%; align-self: flex-start; }
+
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .message-animation { animation: fadeIn 0.25s ease-out; }
-
-    .ai-message { background-color: #1f2937; color: #f97316; border-radius: 1rem 1rem 1rem 0; }
-    .user-message { background-color: #f97316; color: #fff; border-radius: 1rem 1rem 0 1rem; }
-
-    textarea:focus { outline: none; }
-    @media (max-width: 640px) { #user-input { font-size: 16px; } }
 
     body.light-mode { background-color: #ffffff; color: #111827; }
-    body.light-mode header, body.light-mode footer { background-color: #f3f4f6; border-color: #e5e7eb; }
-    body.light-mode .chat-container { background-color: #f9fafb; border-color: #e5e7eb; }
-    body.light-mode .ai-message { background-color: #f3f4f6; color: #111827; }
+    body.light-mode .assistant-message { background-color: #f3f4f6; color: #111827; }
     body.light-mode .user-message { background-color: #fbbf24; color: #1f2937; }
     body.light-mode textarea { background-color: #f3f4f6; color: #111827; border-color: #d1d5db; }
     body.light-mode .message-input button { background-color: #f59e0b; }
     body.light-mode .message-input button:hover { background-color: #d97706; }
-    
+
+    textarea { resize: none; }
     #theme-toggle { transition: transform 0.3s, color 0.3s; }
     #theme-toggle:hover { transform: scale(1.1); }
-    
-    header, footer, .chat-container, .ai-message, .user-message, textarea, button { transition: all 0.3s ease; }
   </style>
 </head>
 
@@ -64,7 +58,7 @@
 
 <main class="flex-1 flex flex-col max-w-3xl w-full mx-auto p-4">
   <div class="chat-container flex-1 flex flex-col border border-gray-700 rounded-xl overflow-hidden">
-    <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
+    <div id="chat-messages" class="flex-1 overflow-y-auto p-4 flex flex-col"></div>
 
     <div id="typing-indicator" class="hidden flex items-center p-3 border-t border-gray-700 text-gray-400">
       <i class="fas fa-robot text-orange-500 mr-2"></i>
@@ -78,7 +72,7 @@
 
     <div class="message-input flex p-4 border-t border-gray-700">
       <textarea id="user-input" placeholder="Type a message..." rows="1"
-                class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-gray-200 placeholder-gray-400 resize-none"
+                class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-gray-200 placeholder-gray-400"
                 autofocus></textarea>
       <button id="send-button"
               class="ml-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-6 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
@@ -89,21 +83,13 @@
 </main>
 
 <footer class="bg-gray-800 border-t border-gray-700 py-3 px-4 mt-4 text-center text-orange-500 text-sm">
-  <p><a href="https://ai.jessejesse.com">ai.jessejesse.com &copy; 2025</a></p>
+  <p><a href="https://jessejesse.com">powered by JesseJesse.com</a></p>
 </footer>
 
-<!-- Real AI integration -->
-<script src="/chat.js" defer></script>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
+
   const themeToggle = document.getElementById('theme-toggle');
   const themeIcon = themeToggle.querySelector('i');
-  const userInput = document.getElementById('user-input');
-  const sendButton = document.getElementById('send-button');
-  const chatMessages = document.getElementById('chat-messages');
-  const typingIndicator = document.getElementById('typing-indicator');
-
-  // Theme toggle
   const currentTheme = localStorage.getItem('theme') || 'dark';
   if (currentTheme === 'light') document.body.classList.add('light-mode');
 
@@ -113,77 +99,12 @@ document.addEventListener('DOMContentLoaded', () => {
     themeIcon.classList.toggle('fa-sun', isLight);
     localStorage.setItem('theme', isLight ? 'light' : 'dark');
   });
-
-  // Auto-resize textarea
-  userInput.addEventListener('input', () => {
-    userInput.style.height = 'auto';
-    userInput.style.height = userInput.scrollHeight + 'px';
-  });
-
-  // Send message
-  sendButton.addEventListener('click', sendMessage);
-  userInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  });
-
-  function sendMessage() {
-    const text = userInput.value.trim();
-    if (!text) return;
-
-    addMessage(text, 'user');
-    userInput.value = '';
-    userInput.style.height = 'auto';
-    typingIndicator.classList.remove('hidden');
-
-    // Call your actual chat.js AI function
-    if (window.sendToAI) {
-      window.sendToAI(text).then(response => {
-        typingIndicator.classList.add('hidden');
-        addMessage(response, 'ai');
-      }).catch(err => {
-        typingIndicator.classList.add('hidden');
-        addMessage("⚠️ Error sending message.", 'ai');
-        console.error(err);
-      });
-    }
-  }
-
-  function addMessage(text, sender) {
-    const div = document.createElement('div');
-    div.classList.add('message-animation', 'flex', 'items-start', 'space-x-3', 'p-3');
-
-    if (sender === 'user') {
-      div.classList.add('justify-end', 'user-message');
-      div.innerHTML = `
-        <div class="px-4 py-2 max-w-[85%] rounded-2xl rounded-tr-none">
-          <p>${text}</p>
-        </div>
-        <div class="bg-orange-500 rounded-full p-2 flex-shrink-0">
-          <i class="fas fa-user text-white"></i>
-        </div>
-      `;
-    } else {
-      div.classList.add('ai-message');
-      div.innerHTML = `
-        <div class="bg-gray-700 rounded-full p-2 flex-shrink-0">
-          <i class="fas fa-robot text-orange-500"></i>
-        </div>
-        <div class="px-4 py-2 max-w-[85%] rounded-2xl rounded-tl-none">
-          <p>${text}</p>
-        </div>
-      `;
-    }
-
-    chatMessages.appendChild(div);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
-});
 </script>
+
+<script src="/chat.js" defer></script>
 </body>
 </html>
+
 
 
 
