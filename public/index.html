@@ -1,229 +1,105 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <link rel="icon" href="/favicon.ico" sizes="any" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/manifest.json" />
 
-    <title>ai.jessejesse.com</title>
+  <title>ai.jessejesse.com</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  />
 
-    <style>
-      .chat-messages::-webkit-scrollbar { width: 6px; }
-      .chat-messages::-webkit-scrollbar-track { background: #1f2937; }
-      .chat-messages::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
-      .chat-messages::-webkit-scrollbar-thumb:hover { background: #6b7280; }
-      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-      .message-animation { animation: fadeIn 0.3s ease-out; }
-      @media (max-width: 640px) { .message-input { padding: 12px; } #user-input { font-size: 16px; } }
-      button:focus-visible, textarea:focus-visible { outline: 2px solid #f97316; outline-offset: 2px; }
+  <style>
+    html, body { height: 100%; }
+    .chat-container::-webkit-scrollbar { width: 6px; }
+    .chat-container::-webkit-scrollbar-track { background: #1f2937; }
+    .chat-container::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+    .chat-container::-webkit-scrollbar-thumb:hover { background: #6b7280; }
 
-      /* ---------- LIGHT MODE OVERRIDES ---------- */
-      body.light-mode {
-        background-color: #ffffff;
-        color: #111827; /* gray-900 */
-      }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .message-animation { animation: fadeIn 0.25s ease-out; }
 
-      body.light-mode header,
-      body.light-mode footer,
-      body.light-mode .chat-container,
-      body.light-mode .message-input,
-      body.light-mode #typing-indicator {
-        background-color: #f9fafb; /* gray-50 */
-        border-color: #e5e7eb;    /* gray-200 */
-      }
+    .ai-message { background-color: #1f2937; color: #f97316; border-radius: 1rem 1rem 1rem 0; }
+    .user-message { background-color: #f97316; color: #fff; border-radius: 1rem 1rem 0 1rem; }
 
-      body.light-mode #chat-messages {
-        background-color: #ffffff;
-      }
+    textarea:focus { outline: none; }
+    @media (max-width: 640px) { #user-input { font-size: 16px; } }
 
-      body.light-mode textarea {
-        background-color: #f3f4f6; /* gray-100 */
-        color: #111827;
-        border-color: #d1d5db;    /* gray-300 */
-      }
+    body.light-mode {
+      background-color: #ffffff; color: #111827;
+    }
+    body.light-mode .chat-container { background-color: #f9fafb; border-color: #e5e7eb; }
+    body.light-mode .ai-message { background-color: #f3f4f6; color: #111827; }
+    body.light-mode .user-message { background-color: #fbbf24; color: #1f2937; }
+    body.light-mode textarea { background-color: #f3f4f6; color: #111827; border-color: #d1d5db; }
+    body.light-mode .message-input button { background-color: #f59e0b; }
+  </style>
+</head>
 
-      body.light-mode .message-input button {
-        background-color: #f59e0b; /* amber-500 */
-      }
+<body class="bg-gray-900 text-gray-200 flex flex-col min-h-screen">
 
-      body.light-mode .ai-message,
-      body.light-mode .bg-gray-800 {
-        background-color: #f3f4f6 !important;
-        color: #111827 !important;
-      }
+<header class="bg-gray-800 border-b border-gray-700 py-4 px-4 flex justify-between items-center">
+  <div class="max-w-3xl mx-auto text-center flex-1">
+    <h1 class="text-2xl font-bold text-orange-500">
+      <i class="fas fa-robot mr-2"></i>Cloudflare Workers AI
+    </h1>
+    <p class="text-gray-400 mt-1">Meta/LLaMa-3.3 70B Instruct Fast</p>
+  </div>
+  <button id="theme-toggle" class="ml-4 text-gray-400 hover:text-orange-500" aria-label="Toggle theme">
+    <i class="fas fa-moon"></i>
+  </button>
+</header>
 
-      body.light-mode .user-message,
-      body.light-mode .bg-orange-500 {
-        background-color: #fbbf24 !important;
-        color: #1f2937 !important;
-      }
-    </style>
-  </head>
-
-  <body class="bg-gray-900 text-gray-200 min-h-screen flex flex-col">
-    <header class="bg-gray-800 border-b border-gray-700 py-4 px-4 flex justify-between items-center">
-      <div class="max-w-3xl mx-auto text-center flex-1">
-        <h1 class="text-2xl font-bold text-orange-500">
-          <i class="fas fa-robot mr-2"></i>Cloudflare Workers AI
-        </h1>
-        <p class="text-gray-400 mt-1">Meta/LLaMa-3.3 70B Instruct Fast</p>
+<main class="flex-1 flex flex-col max-w-3xl w-full mx-auto p-4">
+  <div class="chat-container flex-1 flex flex-col border border-gray-700 rounded-xl overflow-hidden">
+    <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4">
+      <div class="message-animation flex items-start space-x-3 ai-message p-3">
+        <div class="bg-gray-700 rounded-full p-2 flex-shrink-0">
+          <i class="fas fa-robot text-orange-500"></i>
+        </div>
+        <div class="px-4 py-2 max-w-[85%] rounded-2xl rounded-tl-none">
+          <p>Welcome to ai.jessejesse.com!</p>
+        </div>
       </div>
-      <button
-        id="theme-toggle"
-        class="ml-4 text-gray-400 hover:text-orange-500"
-        aria-label="Toggle dark/light mode"
-      >
-        <i class="fas fa-moon"></i>
+    </div>
+
+    <div id="typing-indicator" class="hidden flex items-center p-3 border-t border-gray-700 text-gray-400">
+      <i class="fas fa-robot text-orange-500 mr-2"></i>
+      <span>AI is typing</span>
+      <div class="flex ml-2 space-x-1">
+        <div class="h-1 w-1 bg-gray-400 rounded-full animate-pulse"></div>
+        <div class="h-1 w-1 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
+        <div class="h-1 w-1 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.4s"></div>
+      </div>
+    </div>
+
+    <div class="message-input flex p-4 border-t border-gray-700">
+      <textarea id="user-input" placeholder="Type a message..." rows="1"
+                class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-gray-200 placeholder-gray-400 resize-none"
+                autofocus></textarea>
+      <button id="send-button"
+              class="ml-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-6 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+        <i class="fas fa-paper-plane"></i>
       </button>
-    </header>
+    </div>
+  </div>
+</main>
 
-    <main class="flex-1 flex flex-col max-w-3xl mx-auto w-full p-4" role="main">
-      <div class="chat-container flex-1 flex flex-col border border-gray-700 rounded-xl overflow-hidden bg-gray-800"
-           role="log" aria-live="polite" aria-label="Chat messages">
-        <div id="chat-messages" class="chat-messages flex-1 overflow-y-auto p-4 bg-gray-900 space-y-4">
-          <div class="message-animation flex items-start space-x-3 ai-message">
-            <div class="bg-gray-700 rounded-full p-2 flex-shrink-0">
-              <i class="fas fa-robot text-orange-500"></i>
-            </div>
-            <div class="bg-gray-800 rounded-2xl rounded-tl-none px-4 py-3 max-w-[85%]">
-              <p class="text-gray-200">Welcome to ai.jessejesse.com!</p>
-            </div>
-          </div>
-        </div>
+<footer class="bg-gray-800 border-t border-gray-700 py-3 px-4 mt-4 text-center text-orange-500 text-sm">
+  <p><a href="https://ai.jessejesse.com">ai.jessejesse.com &copy; 2025</a></p>
+</footer>
 
-        <div id="error-message" class="hidden bg-red-900 border border-red-700 text-red-200 p-3 mx-4 mt-2 rounded-lg">
-          <i class="fas fa-exclamation-triangle mr-2"></i>
-          <span id="error-text">Failed to send message. Please try again.</span>
-        </div>
-
-        <div class="typing-indicator hidden bg-gray-800 px-4 py-2 border-t border-gray-700" id="typing-indicator">
-          <div class="flex items-center text-gray-400">
-            <i class="fas fa-robot text-orange-500 mr-2"></i>
-            <span>AI is thinking</span>
-            <div class="flex ml-2 space-x-1">
-              <div class="h-1 w-1 bg-gray-400 rounded-full animate-pulse"></div>
-              <div class="h-1 w-1 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
-              <div class="h-1 w-1 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.4s"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="message-input flex p-4 border-t border-gray-700 bg-gray-800">
-          <textarea id="user-input" placeholder="Type your message here..." rows="1" aria-label="Type your message"
-                    class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
-                    autofocus></textarea>
-          <button id="send-button"
-                  class="ml-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-6 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-                  aria-label="Send message">
-            <i class="fas fa-paper-plane"></i>
-          </button>
-        </div>
-      </div>
-    </main>
-
-    <footer class="bg-gray-800 border-t border-gray-700 py-3 px-4 mt-4">
-      <div class="max-w-3xl mx-auto text-center text-orange-500 text-sm">
-        <p><a href="https://ai.jessejesse.com">ai.jessejesse.com&nbsp;&copy;2025</a></p>
-      </div>
-    </footer>
-
-    <script>
-      // THEME TOGGLE (light-mode class instead of class juggling)
-      const body = document.body;
-      const toggleBtn = document.getElementById("theme-toggle");
-      const icon = toggleBtn.querySelector("i");
-
-      function applyTheme(light) {
-        if (light) {
-          body.classList.add("light-mode");
-          icon.classList.remove("fa-moon");
-          icon.classList.add("fa-sun");
-          localStorage.setItem("theme", "light");
-        } else {
-          body.classList.remove("light-mode");
-          icon.classList.remove("fa-sun");
-          icon.classList.add("fa-moon");
-          localStorage.setItem("theme", "dark");
-        }
-      }
-
-      toggleBtn.addEventListener("click", () => {
-        applyTheme(!body.classList.contains("light-mode"));
-      });
-
-      // Initialize
-      const savedTheme = localStorage.getItem("theme");
-      applyTheme(savedTheme === "light");
-
-      // CHAT FUNCTIONALITY
-      const chatMessages = document.getElementById("chat-messages");
-      const userInput = document.getElementById("user-input");
-      const sendButton = document.getElementById("send-button");
-      const typingIndicator = document.getElementById("typing-indicator");
-      const errorMessage = document.getElementById("error-message");
-
-      function addMessage(text, isUser = false) {
-        const container = document.createElement("div");
-        container.className = "message-animation flex items-start space-x-3";
-        container.innerHTML = `
-          <div class="bg-gray-700 rounded-full p-2 flex-shrink-0">
-            <i class="fas fa-${isUser ? "user" : "robot"} ${isUser ? "text-white" : "text-orange-500"}"></i>
-          </div>
-          <div class="${isUser ? "user-message bg-orange-500 text-white" : "ai-message bg-gray-800 text-gray-200"} rounded-2xl px-4 py-3 max-w-[85%] ${isUser ? "rounded-tr-none" : "rounded-tl-none"}">
-            <p>${text}</p>
-          </div>
-        `;
-        chatMessages.appendChild(container);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-      }
-
-      async function sendMessage() {
-        const message = userInput.value.trim();
-        if (!message) return;
-
-        addMessage(message, true);
-        userInput.value = "";
-        sendButton.disabled = true;
-        typingIndicator.classList.remove("hidden");
-        errorMessage.classList.add("hidden");
-
-        try {
-          if (window.sendToLMStudio) {
-            const response = await window.sendToLMStudio(message);
-            addMessage(response, false);
-          } else {
-            await new Promise(r => setTimeout(r, 500));
-            addMessage("AI response placeholder...", false);
-          }
-        } catch (err) {
-          console.error(err);
-          errorMessage.classList.remove("hidden");
-        } finally {
-          sendButton.disabled = false;
-          typingIndicator.classList.add("hidden");
-          userInput.focus();
-        }
-      }
-
-      sendButton.addEventListener("click", sendMessage);
-      userInput.addEventListener("keypress", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault();
-          sendMessage();
-        }
-      });
-    </script>
-  </body>
+<script src="/chat.js" defer></script>
+</body>
 </html>
+
 
 
 
