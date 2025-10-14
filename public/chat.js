@@ -1,9 +1,7 @@
-
 const chatMessages = document.getElementById("chat-messages");
 const userInput = document.getElementById("user-input");
 const sendButton = document.getElementById("send-button");
 const typingIndicator = document.getElementById("typing-indicator");
-
 
 let chatHistory = [
   {
@@ -14,41 +12,53 @@ let chatHistory = [
 ];
 let isProcessing = false;
 
-
-userInput.addEventListener("input", function () {
-  this.style.height = "auto";
-  this.style.height = this.scrollHeight + "px";
+// Auto-resize textarea
+userInput.addEventListener("input", () => {
+  userInput.style.height = "auto";
+  userInput.style.height = userInput.scrollHeight + "px";
 });
 
-
-userInput.addEventListener("keydown", function (e) {
+// Send on Enter (without Shift)
+userInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
     sendMessage();
   }
 });
 
-
 sendButton.addEventListener("click", sendMessage);
 
+function addMessageToChat(role, content, copyable = false) {
+  const messageEl = document.createElement("div");
+  messageEl.className = `message ${role}-message`;
+
+  let contentEl;
+  if (copyable) {
+    contentEl = document.createElement("pre"); // easy to copy
+    contentEl.style.whiteSpace = "pre-wrap";
+    contentEl.style.wordBreak = "break-word";
+  } else {
+    contentEl = document.createElement("p");
+  }
+
+  contentEl.textContent = content;
+  messageEl.appendChild(contentEl);
+  chatMessages.appendChild(messageEl);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
 
 async function sendMessage() {
   const message = userInput.value.trim();
-
-  if (message === "" || isProcessing) return;
+  if (!message || isProcessing) return;
 
   isProcessing = true;
   userInput.disabled = true;
   sendButton.disabled = true;
 
-
   addMessageToChat("user", message);
-
- 
   userInput.value = "";
   userInput.style.height = "auto";
 
- 
   typingIndicator.classList.add("visible");
 
   chatHistory.push({ role: "user", content: message });
@@ -56,7 +66,10 @@ async function sendMessage() {
   try {
     const assistantMessageEl = document.createElement("div");
     assistantMessageEl.className = "message assistant-message";
-    assistantMessageEl.innerHTML = "<p></p>";
+    const pre = document.createElement("pre");
+    pre.style.whiteSpace = "pre-wrap";
+    pre.style.wordBreak = "break-word";
+    assistantMessageEl.appendChild(pre);
     chatMessages.appendChild(assistantMessageEl);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 
@@ -79,22 +92,23 @@ async function sendMessage() {
       const chunk = decoder.decode(value, { stream: true });
       const lines = chunk.split("\n");
       for (const line of lines) {
+        if (!line.trim()) continue;
         try {
           const jsonData = JSON.parse(line);
           if (jsonData.response) {
             responseText += jsonData.response;
-            assistantMessageEl.querySelector("p").textContent = responseText;
+            pre.textContent = responseText;
             chatMessages.scrollTop = chatMessages.scrollHeight;
           }
-        } catch (e) {
-          console.error("Error parsing JSON:", e);
+        } catch (err) {
+          console.error("Error parsing JSON:", err);
         }
       }
     }
 
     chatHistory.push({ role: "assistant", content: responseText });
-  } catch (error) {
-    console.error("Error:", error);
+  } catch (err) {
+    console.error("Error:", err);
     addMessageToChat("assistant", "Sorry, there was an error processing your request.");
   } finally {
     typingIndicator.classList.remove("visible");
@@ -105,20 +119,4 @@ async function sendMessage() {
   }
 }
 
-
-function addMessageToChat(role, content) {
-  const messageEl = document.createElement("div");
-  messageEl.className = `message ${role}-message`;
-  const p = document.createElement("p");
-
-
-  if (role === "user") {
-    p.className = "user-message";
-  }
-
-  p.textContent = content;
-  messageEl.appendChild(p);
-  chatMessages.appendChild(messageEl);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-}
 
