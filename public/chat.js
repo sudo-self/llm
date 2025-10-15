@@ -7,7 +7,7 @@ let chatHistory = [
   {
     role: "assistant",
     content:
-      "Hello! I'm J a cloudflare worker, how can I help?",
+      "Welcome to ai.jessejesse.com!",
   },
 ];
 let isProcessing = false;
