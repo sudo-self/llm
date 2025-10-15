@@ -71,14 +71,14 @@ function renderMessage(content, isUser = false) {
     '<code class="inline-code">$1</code>'
   );
 
-  // Process line breaks
+
   html = html.replace(/\n/g, '<br>');
 
   msgEl.innerHTML = html;
   chatMessages.appendChild(msgEl);
   scrollToBottom();
 
-  // Highlight code blocks after adding to DOM
+
   highlightCodeBlocks();
 }
 
