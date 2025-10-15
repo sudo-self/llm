@@ -6,7 +6,7 @@ const typingIndicator = document.getElementById("typing-indicator");
 let chatHistory = [
   {
     role: "assistant",
-    content: "Hi! I'm J, your AI assistant. How can I help you today?",
+    content: "Hi! I'm J, How can I help you today?",
   },
 ];
 let isProcessing = false;
@@ -17,7 +17,6 @@ function escapeHtml(text) {
   div.textContent = text;
   return div.innerHTML;
 }
-
 function highlightCodeBlocks() {
   if (typeof Prism !== 'undefined') {
     requestAnimationFrame(() => {
@@ -29,6 +28,30 @@ function highlightCodeBlocks() {
     });
   }
 }
+
+
+function parseSSEChunk(chunk) {
+  const lines = chunk.split('\n');
+  const events = [];
+
+  for (const line of lines) {
+    if (line.startsWith('data: ')) {
+      const data = line.slice(6).trim();
+      if (data === '[DONE]') {
+        events.push({ type: 'done' });
+      } else if (data) {
+        try {
+          events.push({ type: 'data', data: JSON.parse(data) });
+        } catch (err) {
+          console.warn('Failed to parse SSE data:', data, err);
+        }
+      }
+    }
+  }
+
+  return events;
+}
+
 
 renderMessage(chatHistory[0].content, false);
 
@@ -50,6 +73,7 @@ userInput.addEventListener("keydown", (e) => {
   }
 });
 
+
 sendButton.addEventListener("click", () => {
   if (!sendButton.disabled) sendMessage();
 });
@@ -64,10 +88,10 @@ function scrollToBottom() {
   });
 }
 
-
 function renderMessage(content, isUser = false) {
   const msgEl = document.createElement("div");
   msgEl.className = `message ${isUser ? "user-message" : "assistant-message"} ${isUser ? 'slide-in-right' : 'slide-in-left'}`;
+
 
   const codeRegex = /```(\w+)?\n([\s\S]*?)```/g;
   let html = content.replace(codeRegex, (match, lang, code) => {
@@ -91,6 +115,7 @@ function renderMessage(content, isUser = false) {
     /`([^`]+)`/g,
     '<code class="inline-code">$1</code>'
   );
+
 
   html = html.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
   html = `<p>${html}</p>`;
@@ -133,7 +158,6 @@ document.addEventListener("click", (e) => {
   }
 });
 
-
 async function sendMessage() {
   const message = userInput.value.trim();
   if (!message || isProcessing) return;
@@ -147,10 +171,10 @@ async function sendMessage() {
   renderMessage(message, true);
   chatHistory.push({ role: "user", content: message });
 
+
   userInput.value = "";
   userInput.style.height = "auto";
   scrollToBottom();
-
 
   typingIndicator.style.display = "flex";
   typingIndicator.classList.add('visible');
@@ -178,30 +202,46 @@ async function sendMessage() {
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let fullText = "";
+    let buffer = "";
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
-      const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split("\n");
+
+      buffer += decoder.decode(value, { stream: true });
       
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        try {
-          const data = JSON.parse(line);
-          if (data.response) {
-            fullText += data.response;
-            pre.textContent = fullText;
-            scrollToBottom();
-          }
-        } catch (err) {
-          console.warn("JSON parse error for line:", line, err);
+
+      const events = parseSSEChunk(buffer);
+      
+     
+      const lastNewline = buffer.lastIndexOf('\n');
+      if (lastNewline !== -1) {
+        buffer = buffer.slice(lastNewline + 1);
+      }
+
+    
+      for (const event of events) {
+        if (event.type === 'data' && event.data.response) {
+          fullText += event.data.response;
+          pre.textContent = fullText;
+          scrollToBottom();
+        } else if (event.type === 'done') {
+     
+          break;
         }
       }
     }
 
+    const finalEvents = parseSSEChunk(buffer);
+    for (const event of finalEvents) {
+      if (event.type === 'data' && event.data.response) {
+        fullText += event.data.response;
+        pre.textContent = fullText;
+      }
+    }
 
+ 
     responseEl.remove();
     renderMessage(fullText, false);
     chatHistory.push({ role: "assistant", content: fullText });
