@@ -7,83 +7,122 @@ let chatHistory = [
   {
     role: "assistant",
     content:
-      "Hello! I'm an LLM chat app powered by Cloudflare Workers AI. How can I help you today?",
+      "Hello! I'm J a cloudflare worker, how can I help?",
   },
 ];
 let isProcessing = false;
 
-// Auto-resize textarea
+
+renderMessage(chatHistory[0].content, false);
+
+
 userInput.addEventListener("input", () => {
   userInput.style.height = "auto";
-  userInput.style.height = userInput.scrollHeight + "px";
+  userInput.style.height = Math.min(userInput.scrollHeight, 120) + "px";
+  sendButton.disabled = userInput.value.trim() === "" || isProcessing;
 });
 
-// Send on Enter (without Shift)
+
 userInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
-    sendMessage();
+    if (!sendButton.disabled) sendMessage();
   }
 });
 
-sendButton.addEventListener("click", sendMessage);
 
-function addMessageToChat(role, content, copyable = false) {
-  const messageEl = document.createElement("div");
-  messageEl.className = `message ${role}-message`;
+sendButton.addEventListener("click", () => {
+  if (!sendButton.disabled) sendMessage();
+});
 
-  let contentEl;
-  if (copyable) {
-    contentEl = document.createElement("pre"); // easy to copy
-    contentEl.style.whiteSpace = "pre-wrap";
-    contentEl.style.wordBreak = "break-word";
-  } else {
-    contentEl = document.createElement("p");
-  }
 
-  contentEl.textContent = content;
-  messageEl.appendChild(contentEl);
-  chatMessages.appendChild(messageEl);
+function scrollToBottom() {
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
+
+
+function renderMessage(content, isUser = false) {
+  const msgEl = document.createElement("div");
+  msgEl.className = `message ${isUser ? "user-message" : "assistant-message"}`;
+
+
+  const codeRegex = /```(\w+)?\n([\s\S]*?)```/g;
+  let html = content.replace(codeRegex, (match, lang, code) => {
+    const safeLang = lang || "markup";
+    return `
+      <div class="code-block">
+        <button class="copy-btn">Copy</button>
+        <pre><code class="language-${safeLang}">${Prism.highlight(
+      code.trim(),
+      Prism.languages[safeLang] || Prism.languages.markup,
+      safeLang
+    )}</code></pre>
+      </div>
+    `;
+  });
+
+
+  html = html.replace(
+    /`([^`]+)`/g,
+    '<code class="bg-gray-800 text-orange-300 px-1 py-0.5 rounded text-sm">$1</code>'
+  );
+
+  msgEl.innerHTML = html;
+  chatMessages.appendChild(msgEl);
+  scrollToBottom();
+}
+
+
+document.addEventListener("click", (e) => {
+  if (e.target.classList.contains("copy-btn")) {
+    const code = e.target.nextElementSibling.innerText;
+    navigator.clipboard.writeText(code).then(() => {
+      const original = e.target.textContent;
+      e.target.textContent = "Copied!";
+      setTimeout(() => (e.target.textContent = original), 1500);
+    });
+  }
+});
+
 
 async function sendMessage() {
   const message = userInput.value.trim();
   if (!message || isProcessing) return;
 
   isProcessing = true;
-  userInput.disabled = true;
   sendButton.disabled = true;
+  userInput.disabled = true;
 
-  addMessageToChat("user", message);
-  userInput.value = "";
-  userInput.style.height = "auto";
-
-  typingIndicator.classList.add("visible");
-
+  renderMessage(message, true);
   chatHistory.push({ role: "user", content: message });
 
+  userInput.value = "";
+  userInput.style.height = "auto";
+  scrollToBottom();
+
+  typingIndicator.style.display = "flex";
+
   try {
-    const assistantMessageEl = document.createElement("div");
-    assistantMessageEl.className = "message assistant-message";
+    const responseEl = document.createElement("div");
+    responseEl.className = "message assistant-message";
     const pre = document.createElement("pre");
     pre.style.whiteSpace = "pre-wrap";
     pre.style.wordBreak = "break-word";
-    assistantMessageEl.appendChild(pre);
-    chatMessages.appendChild(assistantMessageEl);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    responseEl.appendChild(pre);
+    chatMessages.appendChild(responseEl);
+    scrollToBottom();
 
-    const response = await fetch("/api/chat", {
+    const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ messages: chatHistory }),
     });
 
-    if (!response.ok) throw new Error("Failed to get response");
+    if (!res.ok) throw new Error("Failed to fetch response");
 
-    const reader = response.body.getReader();
+    const reader = res.body.getReader();
     const decoder = new TextDecoder();
-    let responseText = "";
+    let fullText = "";
 
     while (true) {
       const { done, value } = await reader.read();
@@ -94,29 +133,30 @@ async function sendMessage() {
       for (const line of lines) {
         if (!line.trim()) continue;
         try {
-          const jsonData = JSON.parse(line);
-          if (jsonData.response) {
-            responseText += jsonData.response;
-            pre.textContent = responseText;
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+          const data = JSON.parse(line);
+          if (data.response) {
+            fullText += data.response;
+            pre.textContent = fullText;
+            scrollToBottom();
           }
         } catch (err) {
-          console.error("Error parsing JSON:", err);
+          console.error("JSON parse error:", err);
         }
       }
     }
 
-    chatHistory.push({ role: "assistant", content: responseText });
+    chatHistory.push({ role: "assistant", content: fullText });
   } catch (err) {
-    console.error("Error:", err);
-    addMessageToChat("assistant", "Sorry, there was an error processing your request.");
+    console.error(err);
+    renderMessage("Sorry, there was an error processing your request.", false);
   } finally {
-    typingIndicator.classList.remove("visible");
+    typingIndicator.style.display = "none";
     isProcessing = false;
     userInput.disabled = false;
-    sendButton.disabled = false;
+    sendButton.disabled = userInput.value.trim() === "";
     userInput.focus();
   }
 }
+
 
 
