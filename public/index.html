@@ -10,33 +10,26 @@
 
   <title>ai.jessejesse.com</title>
 
-
+  <!-- Prism.js for code highlighting -->
   <link href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism-tomorrow.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-javascript.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-css.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-markup.min.js"></script>
 
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-  />
+
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 
   <style>
     :root {
       --primary: #f97316;
-      --primary-dark: #ea580c;
-      --primary-light: #fdba74;
       --bg-dark: #111827;
-      --bg-card-dark: #1f2937;
       --bg-light: #ffffff;
-      --bg-card-light: #f8fafc;
       --text-dark: #f3f4f6;
       --text-light: #1f2937;
-      --border-dark: #374151;
-      --border-light: #e5e7eb;
-      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
       --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
     }
 
@@ -62,14 +55,41 @@
       border: 1px solid rgba(0, 0, 0, 0.1);
     }
 
+    /* Messages */
+    .user-message {
+      align-self: flex-end;
+      background: rgba(249, 115, 22, 0.1);
+      color: var(--primary);
+      padding: 0.75rem 1rem;
+      border-radius: 0.75rem;
+      margin: 0.5rem 0;
+      max-width: 80%;
+      font-weight: 500;
+      white-space: pre-wrap;
+    }
+    .assistant-message {
+      align-self: flex-start;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-dark);
+      padding: 0.75rem 1rem;
+      border-radius: 0.75rem;
+      margin: 0.5rem 0;
+      max-width: 80%;
+      white-space: pre-wrap;
+    }
+    body.light-mode .assistant-message {
+      background: rgba(0,0,0,0.05);
+      color: var(--text-light);
+    }
 
+    /* Code blocks */
     .code-block {
       position: relative;
       background: #1e1e1e;
       border-radius: 0.75rem;
       overflow: hidden;
       margin: 1rem 0;
-      box-shadow: var(--shadow);
+      box-shadow: var(--shadow-lg);
     }
     .code-block pre {
       margin: 0;
@@ -93,6 +113,14 @@
     }
     .copy-btn:hover {
       background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Input text */
+    #user-input {
+      color: #f97316 !important;
+    }
+    body.light-mode #user-input {
+      color: #f97316 !important;
     }
   </style>
 </head>
@@ -129,9 +157,9 @@
 
     <div class="message-input flex p-4 border-t border-gray-700">
       <textarea id="user-input" placeholder="Ask me anything..." rows="1"
-                class="flex-1 rounded-xl px-4 py-3 text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all duration-300"></textarea>
+                class="flex-1 rounded-xl px-4 py-3 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all duration-300"></textarea>
       <button id="send-button"
-              class="ml-3 text-white rounded-xl px-6 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300">
+              class="ml-3 bg-orange-500 text-white rounded-xl px-6 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300">
         <i class="fas fa-paper-plane"></i>
       </button>
     </div>
@@ -143,7 +171,6 @@
 </footer>
 
 <script>
-
   const themeToggle = document.getElementById('theme-toggle');
   const themeIcon = themeToggle.querySelector('i');
   const currentTheme = localStorage.getItem('theme') || 'dark';
@@ -156,7 +183,6 @@
     localStorage.setItem('theme', isLight ? 'light' : 'dark');
   });
 
-
   document.addEventListener("click", function(e) {
     if (e.target.classList.contains("copy-btn")) {
       const code = e.target.nextElementSibling.innerText;
@@ -167,11 +193,9 @@
     }
   });
 
-
   function renderMessage(content, isUser=false) {
     const msgEl = document.createElement("div");
     msgEl.className = isUser ? "user-message" : "assistant-message";
-
 
     const codeRegex = /```(\w+)?\n([\s\S]*?)```/g;
     let html = content.replace(codeRegex, (match, lang, code) => {
@@ -188,11 +212,19 @@
     document.getElementById("chat-messages").appendChild(msgEl);
     msgEl.scrollIntoView({behavior:"smooth"});
   }
+
+  // Auto resize textarea
+  const input = document.getElementById('user-input');
+  input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = input.scrollHeight + 'px';
+  });
 </script>
 
 <script src="/chat.js" defer></script>
 </body>
 </html>
+
 
 
 
