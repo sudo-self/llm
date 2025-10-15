@@ -6,7 +6,7 @@ const typingIndicator = document.getElementById("typing-indicator");
 let chatHistory = [
   {
     role: "assistant",
-    content: "Welcome to ai.jessejesse.com!",
+    content: "Welcome to ai.jessejesse.com",
   },
 ];
 let isProcessing = false;
