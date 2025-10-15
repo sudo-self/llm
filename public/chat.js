@@ -53,33 +53,52 @@ function parseSSEChunk(chunk) {
   return events;
 }
 
+function renderMessage(content, isUser = false) {
+  const msgEl = document.createElement("div");
+  msgEl.className = `message ${isUser ? "user-message" : "assistant-message"} ${isUser ? 'slide-in-right' : 'slide-in-left'} visible`;
 
-function renderWithCodeFormatting(text, container) {
+  renderChunk(content, msgEl);
 
-  let html = text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-
-
-  html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-    const safeLang = lang || "text";
-    const escapedCode = escapeHtml(code.trim());
-    return `<pre><code class="language-${safeLang}">${escapedCode}</code></pre>`;
-  });
-
-  html = html.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
-
-
-  html = html.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
-  html = `<p>${html}</p>`;
-
-  container.innerHTML = html;
-  highlightCodeBlocks(container);
+  chatMessages.appendChild(msgEl);
+  scrollToBottom();
 }
 
+function renderChunk(text, container) {
+  // Detect code blocks and inline code
+  const fragment = document.createDocumentFragment();
+  let lastIndex = 0;
+  const codeRegex = /```(\w+)?\n([\s\S]*?)```/g;
+  let match;
 
-renderMessage(chatHistory[0].content, false);
+  while ((match = codeRegex.exec(text)) !== null) {
+    const before = text.slice(lastIndex, match.index);
+    if (before.trim()) {
+      const p = document.createElement('p');
+      p.innerHTML = before.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>').replace(/\n/g, '<br>');
+      fragment.appendChild(p);
+    }
+
+    const codeBlock = document.createElement('pre');
+    const codeEl = document.createElement('code');
+    codeEl.className = `language-${match[1] || 'text'}`;
+    codeEl.textContent = match[2].trim();
+    codeBlock.appendChild(codeEl);
+    fragment.appendChild(codeBlock);
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  const remaining = text.slice(lastIndex);
+  if (remaining.trim()) {
+    const p = document.createElement('p');
+    p.innerHTML = remaining.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>').replace(/\n/g, '<br>');
+    fragment.appendChild(p);
+  }
+
+  container.innerHTML = '';
+  container.appendChild(fragment);
+  highlightCodeBlocks(container);
+}
 
 userInput.addEventListener("input", () => {
   userInput.style.height = "auto";
@@ -104,30 +123,14 @@ sendButton.addEventListener("click", () => {
 
 function scrollToBottom() {
   requestAnimationFrame(() => {
-    chatMessages.scrollTo({
-      top: chatMessages.scrollHeight,
-      behavior: 'smooth'
-    });
+    chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
   });
-}
-
-function renderMessage(content, isUser = false) {
-  const msgEl = document.createElement("div");
-  msgEl.className = `message ${isUser ? "user-message" : "assistant-message"} ${isUser ? 'slide-in-right' : 'slide-in-left'}`;
-
-  renderWithCodeFormatting(content, msgEl);
-
-  chatMessages.appendChild(msgEl);
-  setTimeout(() => {
-    msgEl.classList.add('visible');
-  }, 10);
-  scrollToBottom();
 }
 
 document.addEventListener("click", (e) => {
   const copyBtn = e.target.closest(".copy-btn");
   if (copyBtn) {
-    const codeBlock = copyBtn.closest('.code-block');
+    const codeBlock = copyBtn.closest('.code-block') || copyBtn.closest('pre');
     const code = codeBlock.querySelector('code').textContent;
 
     navigator.clipboard.writeText(code).then(() => {
@@ -143,9 +146,7 @@ document.addEventListener("click", (e) => {
         icon.className = originalClass;
         copyBtn.setAttribute('title', 'Copy code');
       }, 2000);
-    }).catch(err => {
-      console.error('Failed to copy text: ', err);
-    });
+    }).catch(err => console.error('Failed to copy text:', err));
   }
 });
 
@@ -170,7 +171,7 @@ async function sendMessage() {
 
   try {
     const responseEl = document.createElement("div");
-    responseEl.className = "message assistant-message streaming";
+    responseEl.className = "message assistant-message streaming visible";
     chatMessages.appendChild(responseEl);
     scrollToBottom();
 
@@ -180,9 +181,7 @@ async function sendMessage() {
       body: JSON.stringify({ messages: chatHistory }),
     });
 
-    if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
-    }
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
@@ -194,41 +193,25 @@ async function sendMessage() {
       if (done) break;
 
       buffer += decoder.decode(value, { stream: true });
-
       const events = parseSSEChunk(buffer);
-
       const lastNewline = buffer.lastIndexOf('\n');
-      if (lastNewline !== -1) {
-        buffer = buffer.slice(lastNewline + 1);
-      }
+      if (lastNewline !== -1) buffer = buffer.slice(lastNewline + 1);
 
       for (const event of events) {
         if (event.type === 'data' && event.data.response) {
           fullText += event.data.response;
-          renderWithCodeFormatting(fullText, responseEl);
+          renderChunk(fullText, responseEl);
           scrollToBottom();
-        } else if (event.type === 'done') {
-          break;
         }
       }
     }
 
-    const finalEvents = parseSSEChunk(buffer);
-    for (const event of finalEvents) {
-      if (event.type === 'data' && event.data.response) {
-        fullText += event.data.response;
-        renderWithCodeFormatting(fullText, responseEl);
-      }
-    }
-
-    responseEl.classList.remove('streaming'); 
+    responseEl.classList.remove('streaming');
     chatHistory.push({ role: "assistant", content: fullText });
+
   } catch (err) {
     console.error("Chat error:", err);
-    renderMessage(
-      "Sorry, I encountered an error while processing your request. Please try again.",
-      false
-    );
+    renderMessage("Sorry, I encountered an error while processing your request. Please try again.", false);
   } finally {
     typingIndicator.style.display = "none";
     typingIndicator.classList.remove('visible');
@@ -239,3 +222,6 @@ async function sendMessage() {
     userInput.focus();
   }
 }
+
+
+renderMessage(chatHistory[0].content, false);
