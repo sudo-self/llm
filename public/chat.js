@@ -6,22 +6,34 @@ const typingIndicator = document.getElementById("typing-indicator");
 let chatHistory = [
   {
     role: "assistant",
-    content:
-      "Welcome to ai.jessejesse.com!",
+    content: "Welcome to ai.jessejesse.com!",
   },
 ];
 let isProcessing = false;
 
 
-renderMessage(chatHistory[0].content, false);
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
 
+
+function highlightCodeBlocks() {
+  if (typeof Prism !== 'undefined') {
+    setTimeout(() => {
+      Prism.highlightAllUnder(chatMessages);
+    }, 0);
+  }
+}
+
+renderMessage(chatHistory[0].content, false);
 
 userInput.addEventListener("input", () => {
   userInput.style.height = "auto";
   userInput.style.height = Math.min(userInput.scrollHeight, 120) + "px";
   sendButton.disabled = userInput.value.trim() === "" || isProcessing;
 });
-
 
 userInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
@@ -30,52 +42,50 @@ userInput.addEventListener("keydown", (e) => {
   }
 });
 
-
 sendButton.addEventListener("click", () => {
   if (!sendButton.disabled) sendMessage();
 });
-
 
 function scrollToBottom() {
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-
 function renderMessage(content, isUser = false) {
   const msgEl = document.createElement("div");
   msgEl.className = `message ${isUser ? "user-message" : "assistant-message"}`;
 
-
   const codeRegex = /```(\w+)?\n([\s\S]*?)```/g;
   let html = content.replace(codeRegex, (match, lang, code) => {
-    const safeLang = lang || "markup";
+    const safeLang = lang || "javascript";
+    const escapedCode = escapeHtml(code.trim());
     return `
       <div class="code-block">
         <button class="copy-btn">Copy</button>
-        <pre><code class="language-${safeLang}">${Prism.highlight(
-      code.trim(),
-      Prism.languages[safeLang] || Prism.languages.markup,
-      safeLang
-    )}</code></pre>
+        <pre><code class="language-${safeLang}">${escapedCode}</code></pre>
       </div>
     `;
   });
 
-
   html = html.replace(
     /`([^`]+)`/g,
-    '<code class="bg-gray-800 text-orange-300 px-1 py-0.5 rounded text-sm">$1</code>'
+    '<code class="inline-code">$1</code>'
   );
+
+  // Process line breaks
+  html = html.replace(/\n/g, '<br>');
 
   msgEl.innerHTML = html;
   chatMessages.appendChild(msgEl);
   scrollToBottom();
-}
 
+  // Highlight code blocks after adding to DOM
+  highlightCodeBlocks();
+}
 
 document.addEventListener("click", (e) => {
   if (e.target.classList.contains("copy-btn")) {
-    const code = e.target.nextElementSibling.innerText;
+    const codeBlock = e.target.closest('.code-block');
+    const code = codeBlock.querySelector('code').textContent;
     navigator.clipboard.writeText(code).then(() => {
       const original = e.target.textContent;
       e.target.textContent = "Copied!";
@@ -83,7 +93,6 @@ document.addEventListener("click", (e) => {
     });
   }
 });
-
 
 async function sendMessage() {
   const message = userInput.value.trim();
@@ -145,6 +154,9 @@ async function sendMessage() {
       }
     }
 
+  
+    responseEl.remove();
+    renderMessage(fullText, false);
     chatHistory.push({ role: "assistant", content: fullText });
   } catch (err) {
     console.error(err);
