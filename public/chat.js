@@ -1,3 +1,5 @@
+// chat.js
+
 const chatMessages = document.getElementById("chat-messages");
 const userInput = document.getElementById("user-input");
 const sendButton = document.getElementById("send-button");
@@ -211,7 +213,6 @@ async function sendMessage() {
       }
     }
 
-
     const finalEvents = parseSSEChunk(buffer);
     for (const event of finalEvents) {
       if (event.type === 'data' && event.data.response) {
@@ -238,7 +239,3 @@ async function sendMessage() {
     userInput.focus();
   }
 }
-
-
-
-
