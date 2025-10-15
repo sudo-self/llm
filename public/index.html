@@ -38,12 +38,9 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    body.light-mode {
-      background: var(--bg-light);
-      color: var(--text-light);
-    }
+    body.light-mode { background: var(--bg-light); color: var(--text-light); }
 
-    .chat-container { background: var(--bg-dark); height: 100%; }
+    .chat-container { background: var(--bg-dark); height: 100%; display: flex; flex-direction: column; }
     body.light-mode .chat-container { background: var(--bg-light); }
 
     .message {
@@ -68,7 +65,7 @@
       color: var(--text-dark);
       border-bottom-left-radius: 0.25rem;
     }
-    
+
     body.light-mode .assistant-message {
       background: #f3f4f6;
       color: var(--text-light);
@@ -82,7 +79,7 @@
       margin: 0.75rem 0;
       max-width: 100%;
     }
-    
+
     .code-block pre {
       margin: 0;
       padding: 1rem;
@@ -91,7 +88,7 @@
       line-height: 1.4;
       -webkit-overflow-scrolling: touch;
     }
-    
+
     .copy-btn {
       position: absolute;
       top: 0.5rem;
@@ -112,30 +109,27 @@
       padding: 1rem;
       position: sticky;
       bottom: 0;
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-end;
     }
-    
-    body.light-mode .message-input {
-      background: var(--bg-light);
-      border-top: 1px solid #e5e7eb;
-    }
+
+    body.light-mode .message-input { background: var(--bg-light); border-top: 1px solid #e5e7eb; }
 
     #user-input {
       background: #1f2937;
       border: 1px solid #374151;
-      color: var(--text-dark) !important;
+      color: var(--text-dark);
       border-radius: 1.5rem;
       padding: 0.75rem 1rem;
       font-size: 1rem;
       line-height: 1.5;
       resize: none;
       max-height: 120px;
+      flex: 1;
     }
-    
-    body.light-mode #user-input {
-      background: #f9fafb;
-      border: 1px solid #d1d5db;
-      color: var(--text-light) !important;
-    }
+
+    body.light-mode #user-input { background: #f9fafb; border: 1px solid #d1d5db; color: var(--text-light); }
 
     #send-button {
       background: var(--primary);
@@ -147,64 +141,25 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
     }
 
-    header {
-      background: var(--bg-dark);
-      border-bottom: 1px solid #374151;
-      padding: 1rem;
-    }
-    
-    body.light-mode header {
-      background: var(--bg-light);
-      border-bottom: 1px solid #e5e7eb;
-    }
+    header { background: var(--bg-dark); border-bottom: 1px solid #374151; padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
+    body.light-mode header { background: var(--bg-light); border-bottom: 1px solid #e5e7eb; }
 
     #typing-indicator {
       background: #1f2937;
       border-top: 1px solid #374151;
       padding: 1rem;
-    }
-    
-    body.light-mode #typing-indicator {
-      background: #f9fafb;
-      border-top: 1px solid #e5e7eb;
+      display: none;
+      align-items: center;
     }
 
-    @media (max-width: 768px) {
-      .message { max-width: 95%; padding: 0.625rem 0.875rem; font-size: 0.95rem; }
-      .code-block pre { padding: 0.75rem; font-size: 0.75rem; }
-      .copy-btn { padding: 0.2rem 0.4rem; font-size: 0.65rem; }
-      .message-input { padding: 0.75rem; }
-      #user-input { padding: 0.625rem 0.875rem; font-size: 1rem; }
-      header { padding: 0.75rem; }
-      header h1 { font-size: 1.25rem !important; }
-      header p { font-size: 0.8rem !important; }
-      .header-icons { gap: 0.25rem !important; }
-      .header-icons a, .header-icons button { padding: 0.5rem !important; }
-    }
+    body.light-mode #typing-indicator { background: #f9fafb; border-top: 1px solid #e5e7eb; }
 
-    @media (max-width: 380px) {
-      .message { max-width: 98%; padding: 0.5rem 0.75rem; font-size: 0.9rem; }
-      .message-input { padding: 0.5rem; }
-      #user-input { padding: 0.5rem 0.75rem; }
-    }
-
-    @supports(padding: max(0px)) {
-      .message-input, header {
-        padding-left: max(1rem, env(safe-area-inset-left));
-        padding-right: max(1rem, env(safe-area-inset-right));
-      }
-      .message-input {
-        padding-bottom: max(1rem, env(safe-area-inset-bottom));
-      }
-    }
   </style>
 </head>
 
 <body class="flex flex-col min-h-screen">
-
 <header class="flex justify-between items-center">
   <div class="flex-1 min-w-0">
     <h1 class="text-xl font-bold text-orange-500 truncate">
@@ -222,17 +177,17 @@
     <a href="https://iconic.jessejesse.xyz" target="_blank" class="text-gray-400 hover:text-orange-500 p-2 rounded-lg transition-colors">
       <i class="fas fa-image"></i>
     </a>
-    <button id="theme-toggle" class="text-gray-400 hover:text-orange-500 p-2 rounded-lg transition-colors" aria-label="Toggle theme">
+    <button id="theme-toggle" class="text-gray-400 hover:text-orange-500 p-2 rounded-lg transition-colors">
       <i class="fas fa-moon"></i>
     </button>
   </div>
 </header>
 
 <main class="flex-1 flex flex-col w-full mx-auto">
-  <div class="chat-container flex-1 flex flex-col h-full">
+  <div class="chat-container flex-1 flex flex-col">
     <div id="chat-messages" class="flex-1 overflow-y-auto p-4 flex flex-col gap-2"></div>
 
-    <div id="typing-indicator" class="hidden flex items-center">
+    <div id="typing-indicator">
       <i class="fas fa-robot text-orange-500 mr-2"></i>
       <span class="text-sm font-medium">Thinking</span>
       <div class="flex ml-2 space-x-1">
@@ -242,20 +197,9 @@
       </div>
     </div>
 
-    <div class="message-input flex items-end gap-2">
-      <textarea 
-        id="user-input" 
-        placeholder="Type a message..." 
-        rows="1"
-        class="flex-1 focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all duration-200"
-      ></textarea>
-      <button 
-        id="send-button"
-        class="hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        disabled
-      >
-        <i class="fas fa-paper-plane text-sm"></i>
-      </button>
+    <div class="message-input">
+      <textarea id="user-input" placeholder="Type a message..." rows="1"></textarea>
+      <button id="send-button" disabled><i class="fas fa-paper-plane"></i></button>
     </div>
   </div>
 </main>
@@ -277,41 +221,7 @@
     localStorage.setItem('theme', isLight ? 'light' : 'dark');
   });
 
-  // Copy code blocks
-  document.addEventListener("click", (e) => {
-    if (e.target.classList.contains("copy-btn")) {
-      const code = e.target.nextElementSibling.innerText;
-      navigator.clipboard.writeText(code).then(() => {
-        const original = e.target.textContent;
-        e.target.textContent = "Copied!";
-        setTimeout(() => e.target.textContent = original, 1500);
-      });
-    }
-  });
-
-  // Render messages
-  function renderMessage(content, isUser=false) {
-    const msgEl = document.createElement("div");
-    msgEl.className = `message ${isUser ? 'user-message' : 'assistant-message'}`;
-
-    const codeRegex = /```(\w+)?\n([\s\S]*?)```/g;
-    let html = content.replace(codeRegex, (match, lang, code) => {
-      const safeLang = lang || "markup";
-      return `
-        <div class="code-block">
-          <button class="copy-btn">Copy</button>
-          <pre><code class="language-${safeLang}">${Prism.highlight(code.trim(), Prism.languages[safeLang] || Prism.languages.markup, safeLang)}</code></pre>
-        </div>
-      `;
-    });
-
-    html = html.replace(/`([^`]+)`/g, '<code class="bg-gray-800 text-orange-300 px-1 py-0.5 rounded text-sm">$1</code>');
-    msgEl.innerHTML = html;
-    document.getElementById("chat-messages").appendChild(msgEl);
-    msgEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }
-
-  // Send button & Enter key
+  // Enable/disable send button and auto-resize textarea
   const input = document.getElementById('user-input');
   const sendButton = document.getElementById('send-button');
 
@@ -327,28 +237,12 @@
       if (!sendButton.disabled) sendButton.click();
     }
   });
-
-  sendButton.addEventListener('click', () => {
-    const message = input.value.trim();
-    if (!message) return;
-
-    renderMessage(message, true);
-
-    input.value = '';
-    sendButton.disabled = true;
-
-  
-    if (typeof sendMessageToChat === 'function') {
-      sendMessageToChat(message);
-    }
-  });
-
-  input.focus();
 </script>
 
 <script src="/chat.js" defer></script>
 </body>
 </html>
+
 
 
 
