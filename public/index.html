@@ -406,7 +406,25 @@
 
 
   input.focus();
+
+  sendButton.addEventListener('click', () => {
+    const message = input.value.trim();
+    if (!message) return;
+
+ 
+    renderMessage(message, true);
+
+   
+    input.value = '';
+    sendButton.disabled = true;
+
+  
+    setTimeout(() => {
+      renderMessage("This is a sample assistant reply.");
+    }, 500);
+  });
 </script>
+
 
 <script src="/chat.js" defer></script>
 </body>
