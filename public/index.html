@@ -10,17 +10,13 @@
 
   <title>ai.jessejesse.com</title>
 
-
   <link href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism-tomorrow.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-javascript.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-css.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-markup.min.js"></script>
 
-
   <script src="https://cdn.tailwindcss.com"></script>
-
-
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 
   <style>
@@ -32,9 +28,7 @@
       --text-light: #1f2937;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       background: var(--bg-dark);
@@ -43,22 +37,14 @@
       transition: all 0.3s ease;
       -webkit-tap-highlight-color: transparent;
     }
-    
+
     body.light-mode {
       background: var(--bg-light);
       color: var(--text-light);
     }
 
-
-    .chat-container {
-      background: var(--bg-dark);
-      height: 100%;
-    }
-    
-    body.light-mode .chat-container {
-      background: var(--bg-light);
-    }
-
+    .chat-container { background: var(--bg-dark); height: 100%; }
+    body.light-mode .chat-container { background: var(--bg-light); }
 
     .message {
       max-width: 90%;
@@ -87,7 +73,6 @@
       background: #f3f4f6;
       color: var(--text-light);
     }
-
 
     .code-block {
       position: relative;
@@ -120,7 +105,6 @@
       cursor: pointer;
       backdrop-filter: blur(10px);
     }
-
 
     .message-input {
       background: var(--bg-dark);
@@ -166,7 +150,6 @@
       flex-shrink: 0;
     }
 
-
     header {
       background: var(--bg-dark);
       border-bottom: 1px solid #374151;
@@ -178,7 +161,6 @@
       border-bottom: 1px solid #e5e7eb;
     }
 
- 
     #typing-indicator {
       background: #1f2937;
       border-top: 1px solid #374151;
@@ -190,78 +172,30 @@
       border-top: 1px solid #e5e7eb;
     }
 
-
     @media (max-width: 768px) {
-      .message {
-        max-width: 95%;
-        padding: 0.625rem 0.875rem;
-        font-size: 0.95rem;
-      }
-      
-      .code-block pre {
-        padding: 0.75rem;
-        font-size: 0.75rem;
-      }
-      
-      .copy-btn {
-        padding: 0.2rem 0.4rem;
-        font-size: 0.65rem;
-      }
-      
-      .message-input {
-        padding: 0.75rem;
-      }
-      
-      #user-input {
-        padding: 0.625rem 0.875rem;
-        font-size: 1rem;
-      }
-      
-      header {
-        padding: 0.75rem;
-      }
-      
-      header h1 {
-        font-size: 1.25rem !important;
-      }
-      
-      header p {
-        font-size: 0.8rem !important;
-      }
-      
-      .header-icons {
-        gap: 0.25rem !important;
-      }
-      
-      .header-icons a, .header-icons button {
-        padding: 0.5rem !important;
-      }
+      .message { max-width: 95%; padding: 0.625rem 0.875rem; font-size: 0.95rem; }
+      .code-block pre { padding: 0.75rem; font-size: 0.75rem; }
+      .copy-btn { padding: 0.2rem 0.4rem; font-size: 0.65rem; }
+      .message-input { padding: 0.75rem; }
+      #user-input { padding: 0.625rem 0.875rem; font-size: 1rem; }
+      header { padding: 0.75rem; }
+      header h1 { font-size: 1.25rem !important; }
+      header p { font-size: 0.8rem !important; }
+      .header-icons { gap: 0.25rem !important; }
+      .header-icons a, .header-icons button { padding: 0.5rem !important; }
     }
-
 
     @media (max-width: 380px) {
-      .message {
-        max-width: 98%;
-        padding: 0.5rem 0.75rem;
-        font-size: 0.9rem;
-      }
-      
-      .message-input {
-        padding: 0.5rem;
-      }
-      
-      #user-input {
-        padding: 0.5rem 0.75rem;
-      }
+      .message { max-width: 98%; padding: 0.5rem 0.75rem; font-size: 0.9rem; }
+      .message-input { padding: 0.5rem; }
+      #user-input { padding: 0.5rem 0.75rem; }
     }
-
 
     @supports(padding: max(0px)) {
       .message-input, header {
         padding-left: max(1rem, env(safe-area-inset-left));
         padding-right: max(1rem, env(safe-area-inset-right));
       }
-      
       .message-input {
         padding-bottom: max(1rem, env(safe-area-inset-bottom));
       }
@@ -293,7 +227,6 @@
     </button>
   </div>
 </header>
-
 
 <main class="flex-1 flex flex-col w-full mx-auto">
   <div class="chat-container flex-1 flex flex-col h-full">
@@ -327,17 +260,15 @@
   </div>
 </main>
 
-
 <footer class="py-3 px-4 text-center text-orange-500 text-sm border-t border-gray-700">
   <a href="https://jessejesse.com" class="hover:text-orange-400 transition-colors">JesseJesse.com</a>
 </footer>
 
 <script>
-
+  // Theme toggle
   const themeToggle = document.getElementById('theme-toggle');
   const themeIcon = themeToggle.querySelector('i');
-  const currentTheme = localStorage.getItem('theme') || 'dark';
-  if (currentTheme === 'light') document.body.classList.add('light-mode');
+  if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
 
   themeToggle.addEventListener('click', () => {
     const isLight = document.body.classList.toggle('light-mode');
@@ -346,19 +277,19 @@
     localStorage.setItem('theme', isLight ? 'light' : 'dark');
   });
 
-
-  document.addEventListener("click", function(e) {
+  // Copy code blocks
+  document.addEventListener("click", (e) => {
     if (e.target.classList.contains("copy-btn")) {
       const code = e.target.nextElementSibling.innerText;
       navigator.clipboard.writeText(code).then(() => {
-        const originalText = e.target.textContent;
+        const original = e.target.textContent;
         e.target.textContent = "Copied!";
-        setTimeout(() => e.target.textContent = originalText, 1500);
+        setTimeout(() => e.target.textContent = original, 1500);
       });
     }
   });
 
-
+  // Render messages
   function renderMessage(content, isUser=false) {
     const msgEl = document.createElement("div");
     msgEl.className = `message ${isUser ? 'user-message' : 'assistant-message'}`;
@@ -374,61 +305,51 @@
       `;
     });
 
-
     html = html.replace(/`([^`]+)`/g, '<code class="bg-gray-800 text-orange-300 px-1 py-0.5 rounded text-sm">$1</code>');
-
     msgEl.innerHTML = html;
     document.getElementById("chat-messages").appendChild(msgEl);
     msgEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
- 
+  // Send button & Enter key
   const input = document.getElementById('user-input');
   const sendButton = document.getElementById('send-button');
-  
+
   input.addEventListener('input', () => {
     input.style.height = 'auto';
     input.style.height = Math.min(input.scrollHeight, 120) + 'px';
-    
-  
     sendButton.disabled = input.value.trim() === '';
   });
-
 
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      if (!sendButton.disabled) {
-        sendButton.click();
-      }
+      if (!sendButton.disabled) sendButton.click();
     }
   });
-
-
-  input.focus();
 
   sendButton.addEventListener('click', () => {
     const message = input.value.trim();
     if (!message) return;
 
- 
     renderMessage(message, true);
 
-   
     input.value = '';
     sendButton.disabled = true;
 
   
-    setTimeout(() => {
-      renderMessage("This is a sample assistant reply.");
-    }, 500);
+    if (typeof sendMessageToChat === 'function') {
+      sendMessageToChat(message);
+    }
   });
-</script>
 
+  input.focus();
+</script>
 
 <script src="/chat.js" defer></script>
 </body>
 </html>
+
 
 
 
