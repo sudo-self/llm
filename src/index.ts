@@ -1,8 +1,4 @@
-/**
- * LLM Chat Application Template with CORS
- *
- * @license MIT
- */
+
 import { Env, ChatMessage } from "./types";
 
 
@@ -10,7 +6,7 @@ const MODEL_ID = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 
 
 const SYSTEM_PROMPT =
-  "You are a helpful, friendly assistant. Provide concise and accurate responses.";
+  "You are a helpful, friendly assistant named J. Provide concise and accurate responses.";
 
 
 function corsHeaders() {
