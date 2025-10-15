@@ -157,7 +157,7 @@
 
     <div id="typing-indicator">
       <i class="fas fa-robot text-orange-500 mr-2"></i>
-      <span class="text-sm font-medium">Thinking</span>
+      <span class="text-sm font-medium">Thinking...</span>
       <div class="flex ml-2 space-x-1">
         <div class="h-1.5 w-1.5 bg-orange-500 rounded-full animate-pulse"></div>
         <div class="h-1.5 w-1.5 bg-orange-500 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
@@ -166,7 +166,7 @@
     </div>
 
     <div class="message-input">
-      <textarea id="user-input" placeholder="Type a message..." rows="1"></textarea>
+      <textarea id="user-input" placeholder="Ask me anything..." rows="1"></textarea>
       <button id="send-button" disabled><i class="fas fa-paper-plane"></i></button>
     </div>
   </div>
@@ -176,7 +176,7 @@
   <a href="https://jessejesse.com" class="hover:text-orange-400 transition-colors">JesseJesse.com</a>
 </footer>
 
-<!-- Theme toggle script -->
+
 <script>
 const themeToggle = document.getElementById('theme-toggle');
 const themeIcon = themeToggle.querySelector('i');
@@ -190,7 +190,7 @@ themeToggle.addEventListener('click', () => {
 });
 </script>
 
-<!-- Load chat.js last -->
+
 <script src="/chat.js" defer></script>
 
 </body>
