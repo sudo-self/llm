@@ -11,24 +11,23 @@ let chatHistory = [
 ];
 let isProcessing = false;
 
-
 function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
 }
-function highlightCodeBlocks() {
+
+function highlightCodeBlocks(container = chatMessages) {
   if (typeof Prism !== 'undefined') {
     requestAnimationFrame(() => {
       try {
-        Prism.highlightAllUnder(chatMessages);
+        Prism.highlightAllUnder(container);
       } catch (error) {
         console.warn('Prism highlighting failed:', error);
       }
     });
   }
 }
-
 
 function parseSSEChunk(chunk) {
   const lines = chunk.split('\n');
@@ -53,18 +52,42 @@ function parseSSEChunk(chunk) {
 }
 
 
+function renderWithCodeFormatting(text, container) {
+
+  let html = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+
+  html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+    const safeLang = lang || "text";
+    const escapedCode = escapeHtml(code.trim());
+    return `<pre><code class="language-${safeLang}">${escapedCode}</code></pre>`;
+  });
+
+  html = html.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+
+
+  html = html.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+  html = `<p>${html}</p>`;
+
+  container.innerHTML = html;
+  highlightCodeBlocks(container);
+}
+
+
 renderMessage(chatHistory[0].content, false);
 
 userInput.addEventListener("input", () => {
   userInput.style.height = "auto";
   const newHeight = Math.min(userInput.scrollHeight, 120);
   userInput.style.height = newHeight + "px";
-  
+
   const hasText = userInput.value.trim() !== "";
   sendButton.disabled = !hasText || isProcessing;
   sendButton.classList.toggle("enabled", hasText && !isProcessing);
 });
-
 
 userInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
@@ -73,11 +96,9 @@ userInput.addEventListener("keydown", (e) => {
   }
 });
 
-
 sendButton.addEventListener("click", () => {
   if (!sendButton.disabled) sendMessage();
 });
-
 
 function scrollToBottom() {
   requestAnimationFrame(() => {
@@ -92,61 +113,29 @@ function renderMessage(content, isUser = false) {
   const msgEl = document.createElement("div");
   msgEl.className = `message ${isUser ? "user-message" : "assistant-message"} ${isUser ? 'slide-in-right' : 'slide-in-left'}`;
 
+  renderWithCodeFormatting(content, msgEl);
 
-  const codeRegex = /```(\w+)?\n([\s\S]*?)```/g;
-  let html = content.replace(codeRegex, (match, lang, code) => {
-    const safeLang = lang || "text";
-    const escapedCode = escapeHtml(code.trim());
-    return `
-      <div class="code-block">
-        <div class="code-header">
-          <span class="code-language">${safeLang}</span>
-          <button class="copy-btn" title="Copy code">
-            <i class="fas fa-copy"></i>
-          </button>
-        </div>
-        <pre><code class="language-${safeLang}">${escapedCode}</code></pre>
-      </div>
-    `;
-  });
-
-
-  html = html.replace(
-    /`([^`]+)`/g,
-    '<code class="inline-code">$1</code>'
-  );
-
-
-  html = html.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
-  html = `<p>${html}</p>`;
-
-  msgEl.innerHTML = html;
   chatMessages.appendChild(msgEl);
-  
-
   setTimeout(() => {
     msgEl.classList.add('visible');
   }, 10);
-  
   scrollToBottom();
-  highlightCodeBlocks();
 }
-
 
 document.addEventListener("click", (e) => {
   const copyBtn = e.target.closest(".copy-btn");
   if (copyBtn) {
     const codeBlock = copyBtn.closest('.code-block');
     const code = codeBlock.querySelector('code').textContent;
-    
+
     navigator.clipboard.writeText(code).then(() => {
       const icon = copyBtn.querySelector('i');
       const originalClass = icon.className;
-      
+
       copyBtn.classList.add('copied');
       icon.className = 'fas fa-check';
       copyBtn.setAttribute('title', 'Copied!');
-      
+
       setTimeout(() => {
         copyBtn.classList.remove('copied');
         icon.className = originalClass;
@@ -167,10 +156,8 @@ async function sendMessage() {
   userInput.disabled = true;
   sendButton.classList.remove('enabled');
 
-
   renderMessage(message, true);
   chatHistory.push({ role: "user", content: message });
-
 
   userInput.value = "";
   userInput.style.height = "auto";
@@ -182,10 +169,6 @@ async function sendMessage() {
   try {
     const responseEl = document.createElement("div");
     responseEl.className = "message assistant-message streaming";
-    const pre = document.createElement("pre");
-    pre.style.whiteSpace = "pre-wrap";
-    pre.style.wordBreak = "break-word";
-    responseEl.appendChild(pre);
     chatMessages.appendChild(responseEl);
     scrollToBottom();
 
@@ -208,44 +191,37 @@ async function sendMessage() {
       const { done, value } = await reader.read();
       if (done) break;
 
-
       buffer += decoder.decode(value, { stream: true });
-      
 
       const events = parseSSEChunk(buffer);
-      
-     
+
       const lastNewline = buffer.lastIndexOf('\n');
       if (lastNewline !== -1) {
         buffer = buffer.slice(lastNewline + 1);
       }
 
-    
       for (const event of events) {
         if (event.type === 'data' && event.data.response) {
           fullText += event.data.response;
-          pre.textContent = fullText;
+          renderWithCodeFormatting(fullText, responseEl);
           scrollToBottom();
         } else if (event.type === 'done') {
-     
           break;
         }
       }
     }
 
+
     const finalEvents = parseSSEChunk(buffer);
     for (const event of finalEvents) {
       if (event.type === 'data' && event.data.response) {
         fullText += event.data.response;
-        pre.textContent = fullText;
+        renderWithCodeFormatting(fullText, responseEl);
       }
     }
 
- 
-    responseEl.remove();
-    renderMessage(fullText, false);
+    responseEl.classList.remove('streaming'); 
     chatHistory.push({ role: "assistant", content: fullText });
-    
   } catch (err) {
     console.error("Chat error:", err);
     renderMessage(
@@ -258,12 +234,11 @@ async function sendMessage() {
     isProcessing = false;
     userInput.disabled = false;
     sendButton.disabled = userInput.value.trim() === "";
-    if (userInput.value.trim()) {
-      sendButton.classList.add('enabled');
-    }
+    if (userInput.value.trim()) sendButton.classList.add('enabled');
     userInput.focus();
   }
 }
+
 
 
 
