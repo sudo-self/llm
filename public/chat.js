@@ -6,7 +6,7 @@ const typingIndicator = document.getElementById("typing-indicator");
 let chatHistory = [
   {
     role: "assistant",
-    content: "Welcome to ai.jessejesse.com",
+    content: "Hi! I'm J, your AI assistant. How can I help you today?",
   },
 ];
 let isProcessing = false;
@@ -18,12 +18,15 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-
 function highlightCodeBlocks() {
   if (typeof Prism !== 'undefined') {
-    setTimeout(() => {
-      Prism.highlightAllUnder(chatMessages);
-    }, 0);
+    requestAnimationFrame(() => {
+      try {
+        Prism.highlightAllUnder(chatMessages);
+      } catch (error) {
+        console.warn('Prism highlighting failed:', error);
+      }
+    });
   }
 }
 
@@ -31,9 +34,14 @@ renderMessage(chatHistory[0].content, false);
 
 userInput.addEventListener("input", () => {
   userInput.style.height = "auto";
-  userInput.style.height = Math.min(userInput.scrollHeight, 120) + "px";
-  sendButton.disabled = userInput.value.trim() === "" || isProcessing;
+  const newHeight = Math.min(userInput.scrollHeight, 120);
+  userInput.style.height = newHeight + "px";
+  
+  const hasText = userInput.value.trim() !== "";
+  sendButton.disabled = !hasText || isProcessing;
+  sendButton.classList.toggle("enabled", hasText && !isProcessing);
 });
+
 
 userInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
@@ -46,53 +54,85 @@ sendButton.addEventListener("click", () => {
   if (!sendButton.disabled) sendMessage();
 });
 
+
 function scrollToBottom() {
-  chatMessages.scrollTop = chatMessages.scrollHeight;
+  requestAnimationFrame(() => {
+    chatMessages.scrollTo({
+      top: chatMessages.scrollHeight,
+      behavior: 'smooth'
+    });
+  });
 }
+
 
 function renderMessage(content, isUser = false) {
   const msgEl = document.createElement("div");
-  msgEl.className = `message ${isUser ? "user-message" : "assistant-message"}`;
+  msgEl.className = `message ${isUser ? "user-message" : "assistant-message"} ${isUser ? 'slide-in-right' : 'slide-in-left'}`;
 
   const codeRegex = /```(\w+)?\n([\s\S]*?)```/g;
   let html = content.replace(codeRegex, (match, lang, code) => {
-    const safeLang = lang || "javascript";
+    const safeLang = lang || "text";
     const escapedCode = escapeHtml(code.trim());
     return `
       <div class="code-block">
-        <button class="copy-btn">Copy</button>
+        <div class="code-header">
+          <span class="code-language">${safeLang}</span>
+          <button class="copy-btn" title="Copy code">
+            <i class="fas fa-copy"></i>
+          </button>
+        </div>
         <pre><code class="language-${safeLang}">${escapedCode}</code></pre>
       </div>
     `;
   });
+
 
   html = html.replace(
     /`([^`]+)`/g,
     '<code class="inline-code">$1</code>'
   );
 
-
-  html = html.replace(/\n/g, '<br>');
+  html = html.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+  html = `<p>${html}</p>`;
 
   msgEl.innerHTML = html;
   chatMessages.appendChild(msgEl);
+  
+
+  setTimeout(() => {
+    msgEl.classList.add('visible');
+  }, 10);
+  
   scrollToBottom();
-
-
   highlightCodeBlocks();
 }
 
+
 document.addEventListener("click", (e) => {
-  if (e.target.classList.contains("copy-btn")) {
-    const codeBlock = e.target.closest('.code-block');
+  const copyBtn = e.target.closest(".copy-btn");
+  if (copyBtn) {
+    const codeBlock = copyBtn.closest('.code-block');
     const code = codeBlock.querySelector('code').textContent;
+    
     navigator.clipboard.writeText(code).then(() => {
-      const original = e.target.textContent;
-      e.target.textContent = "Copied!";
-      setTimeout(() => (e.target.textContent = original), 1500);
+      const icon = copyBtn.querySelector('i');
+      const originalClass = icon.className;
+      
+      copyBtn.classList.add('copied');
+      icon.className = 'fas fa-check';
+      copyBtn.setAttribute('title', 'Copied!');
+      
+      setTimeout(() => {
+        copyBtn.classList.remove('copied');
+        icon.className = originalClass;
+        copyBtn.setAttribute('title', 'Copy code');
+      }, 2000);
+    }).catch(err => {
+      console.error('Failed to copy text: ', err);
     });
   }
 });
+
 
 async function sendMessage() {
   const message = userInput.value.trim();
@@ -101,6 +141,8 @@ async function sendMessage() {
   isProcessing = true;
   sendButton.disabled = true;
   userInput.disabled = true;
+  sendButton.classList.remove('enabled');
+
 
   renderMessage(message, true);
   chatHistory.push({ role: "user", content: message });
@@ -109,11 +151,13 @@ async function sendMessage() {
   userInput.style.height = "auto";
   scrollToBottom();
 
+
   typingIndicator.style.display = "flex";
+  typingIndicator.classList.add('visible');
 
   try {
     const responseEl = document.createElement("div");
-    responseEl.className = "message assistant-message";
+    responseEl.className = "message assistant-message streaming";
     const pre = document.createElement("pre");
     pre.style.whiteSpace = "pre-wrap";
     pre.style.wordBreak = "break-word";
@@ -127,7 +171,9 @@ async function sendMessage() {
       body: JSON.stringify({ messages: chatHistory }),
     });
 
-    if (!res.ok) throw new Error("Failed to fetch response");
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
@@ -139,6 +185,7 @@ async function sendMessage() {
 
       const chunk = decoder.decode(value, { stream: true });
       const lines = chunk.split("\n");
+      
       for (const line of lines) {
         if (!line.trim()) continue;
         try {
@@ -149,23 +196,31 @@ async function sendMessage() {
             scrollToBottom();
           }
         } catch (err) {
-          console.error("JSON parse error:", err);
+          console.warn("JSON parse error for line:", line, err);
         }
       }
     }
 
-  
+
     responseEl.remove();
     renderMessage(fullText, false);
     chatHistory.push({ role: "assistant", content: fullText });
+    
   } catch (err) {
-    console.error(err);
-    renderMessage("Sorry, there was an error processing your request.", false);
+    console.error("Chat error:", err);
+    renderMessage(
+      "Sorry, I encountered an error while processing your request. Please try again.",
+      false
+    );
   } finally {
     typingIndicator.style.display = "none";
+    typingIndicator.classList.remove('visible');
     isProcessing = false;
     userInput.disabled = false;
     sendButton.disabled = userInput.value.trim() === "";
+    if (userInput.value.trim()) {
+      sendButton.classList.add('enabled');
+    }
     userInput.focus();
   }
 }
