@@ -71,38 +71,6 @@
       color: var(--text-light);
     }
 
-    .code-block {
-      position: relative;
-      background: #1e1e1e;
-      border-radius: 0.5rem;
-      overflow: hidden;
-      margin: 0.75rem 0;
-      max-width: 100%;
-    }
-
-    .code-block pre {
-      margin: 0;
-      padding: 1rem;
-      overflow-x: auto;
-      font-size: 0.8rem;
-      line-height: 1.4;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .copy-btn {
-      position: absolute;
-      top: 0.5rem;
-      right: 0.5rem;
-      background: rgba(255, 255, 255, 0.1);
-      color: var(--primary);
-      border: none;
-      padding: 0.25rem 0.5rem;
-      border-radius: 0.25rem;
-      font-size: 0.7rem;
-      cursor: pointer;
-      backdrop-filter: blur(10px);
-    }
-
     .message-input {
       background: var(--bg-dark);
       border-top: 1px solid #374151;
@@ -208,51 +176,26 @@
   <a href="https://jessejesse.com" class="hover:text-orange-400 transition-colors">JesseJesse.com</a>
 </footer>
 
+<!-- Theme toggle script -->
 <script>
+const themeToggle = document.getElementById('theme-toggle');
+const themeIcon = themeToggle.querySelector('i');
+if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
 
-  const themeToggle = document.getElementById('theme-toggle');
-  const themeIcon = themeToggle.querySelector('i');
-  if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
-
-  themeToggle.addEventListener('click', () => {
-    const isLight = document.body.classList.toggle('light-mode');
-    themeIcon.classList.toggle('fa-moon', !isLight);
-    themeIcon.classList.toggle('fa-sun', isLight);
-    localStorage.setItem('theme', isLight ? 'light' : 'dark');
-  });
-
-
-  const input = document.getElementById('user-input');
-  const sendButton = document.getElementById('send-button');
-
-
-  input.addEventListener('input', () => {
-    input.style.height = 'auto';
-    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
-    sendButton.disabled = input.value.trim() === '';
-  });
-
- 
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      if (!sendButton.disabled && typeof sendMessage === 'function') {
-        sendMessage();
-      }
-    }
-  });
-
-
-  sendButton.addEventListener('click', () => {
-    if (typeof sendMessage === 'function') {
-      sendMessage();
-    }
-  });
+themeToggle.addEventListener('click', () => {
+  const isLight = document.body.classList.toggle('light-mode');
+  themeIcon.classList.toggle('fa-moon', !isLight);
+  themeIcon.classList.toggle('fa-sun', isLight);
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+});
 </script>
 
+<!-- Load chat.js last -->
 <script src="/chat.js" defer></script>
+
 </body>
 </html>
+
 
 
 
