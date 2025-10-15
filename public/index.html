@@ -209,7 +209,7 @@
 </footer>
 
 <script>
-  // Theme toggle
+
   const themeToggle = document.getElementById('theme-toggle');
   const themeIcon = themeToggle.querySelector('i');
   if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
@@ -221,9 +221,10 @@
     localStorage.setItem('theme', isLight ? 'light' : 'dark');
   });
 
-  // Enable/disable send button and auto-resize textarea
+
   const input = document.getElementById('user-input');
   const sendButton = document.getElementById('send-button');
+
 
   input.addEventListener('input', () => {
     input.style.height = 'auto';
@@ -231,10 +232,20 @@
     sendButton.disabled = input.value.trim() === '';
   });
 
+ 
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      if (!sendButton.disabled) sendButton.click();
+      if (!sendButton.disabled && typeof sendMessage === 'function') {
+        sendMessage();
+      }
+    }
+  });
+
+
+  sendButton.addEventListener('click', () => {
+    if (typeof sendMessage === 'function') {
+      sendMessage();
     }
   });
 </script>
