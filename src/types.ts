@@ -11,13 +11,33 @@ export interface Env {
   /**
    * Binding for static assets.
    */
-  ASSETS: { fetch: (request: Request) => Promise<Response> };
+  ASSETS: Fetcher;
 }
 
 /**
- * Represents a chat message.
+ * Represents a chat message with role and content.
  */
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
   content: string;
+  timestamp?: number; // Optional timestamp for client-side sorting
+}
+
+/**
+ * Extended error interface for better error handling
+ */
+export interface ChatError {
+  error: string;
+  message: string;
+  code?: number;
+  retryAfter?: number;
+}
+
+/**
+ * Response format for streaming chunks
+ */
+export interface StreamResponse {
+  response: string;
+  type?: "chunk" | "complete";
+  timestamp?: number;
 }
