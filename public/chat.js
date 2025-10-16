@@ -1,3 +1,5 @@
+// chat.js
+
 const chatMessages = document.getElementById("chat-messages");
 const userInput = document.getElementById("user-input");
 const sendButton = document.getElementById("send-button");
@@ -17,7 +19,10 @@ function escapeHtml(text) {
 
 function highlightCodeBlocks(container = chatMessages) {
   if (typeof Prism !== 'undefined') {
-    requestAnimationFrame(() => Prism.highlightAllUnder(container));
+    // Wait for DOM to be updated then highlight
+    setTimeout(() => {
+      Prism.highlightAllUnder(container);
+    }, 0);
   }
 }
 
@@ -47,6 +52,7 @@ function renderChunk(text, container) {
     header.className = 'code-header';
 
     const langLabel = document.createElement('span');
+    langLabel.className = 'code-language';
     langLabel.textContent = match[1] || 'text';
 
     const copyBtn = document.createElement('button');
@@ -80,7 +86,7 @@ function renderChunk(text, container) {
   highlightCodeBlocks(container);
 }
 
-function renderMessage(content, isUser=false) {
+function renderMessage(content, isUser = false) {
   const msgEl = document.createElement('div');
   msgEl.className = `message ${isUser ? 'user-message' : 'assistant-message'} visible`;
   if(!isUser) msgEl.classList.add('streaming');
@@ -89,7 +95,9 @@ function renderMessage(content, isUser=false) {
   scrollToBottom();
 
   if(isUser) {
-    renderChunk(content, msgEl);
+    const userContent = document.createElement('div');
+    userContent.textContent = content;
+    msgEl.appendChild(userContent);
   } else {
     appendStreamingText(content, msgEl);
   }
@@ -97,48 +105,94 @@ function renderMessage(content, isUser=false) {
 
 // --- Streaming text ---
 async function appendStreamingText(fullText, container) {
-  const p = document.createElement('p');
-  container.appendChild(p);
+  const contentDiv = document.createElement('div');
+  container.appendChild(contentDiv);
 
   let i = 0;
+  const chunkSize = 2; // Process 2 characters at a time for smoother streaming
+  
   while(i < fullText.length) {
-    p.innerHTML = escapeHtml(fullText.slice(0, i+1)).replace(/\n/g,'<br>');
+    const chunk = fullText.slice(0, i + chunkSize);
+    renderChunk(chunk, contentDiv);
     scrollToBottom();
-    i++;
-    await new Promise(r => setTimeout(r, 15)); // simulate typing
+    i += chunkSize;
+    await new Promise(r => setTimeout(r, 15));
   }
 
   container.classList.remove('streaming');
-  highlightCodeBlocks(container);
 }
 
 // --- Copy buttons ---
-document.addEventListener('click', e=>{
+document.addEventListener('click', e => {
   const btn = e.target.closest('.copy-btn');
   if(!btn) return;
-  const codeEl = btn.closest('.code-block')?.querySelector('code');
+  
+  const codeBlock = btn.closest('.code-block');
+  const codeEl = codeBlock?.querySelector('code');
   if(!codeEl) return;
-  navigator.clipboard.writeText(codeEl.textContent);
-  btn.classList.add('copied');
-  setTimeout(()=>btn.classList.remove('copied'),2000);
+  
+  navigator.clipboard.writeText(codeEl.textContent).then(() => {
+    const icon = btn.querySelector('i');
+    btn.classList.add('copied');
+    icon.classList.replace('fa-copy', 'fa-check');
+    
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      icon.classList.replace('fa-check', 'fa-copy');
+    }, 2000);
+  });
 });
 
 // --- Input handling ---
 userInput.addEventListener('input', () => {
   userInput.style.height = 'auto';
-  userInput.style.height = Math.min(userInput.scrollHeight,120)+'px';
+  userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px';
   const hasText = userInput.value.trim() !== '';
   sendButton.disabled = !hasText || isProcessing;
   sendButton.classList.toggle('enabled', hasText && !isProcessing);
 });
 
-userInput.addEventListener('keydown', e=>{
-  if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); if(!sendButton.disabled) sendMessage(); }
+userInput.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && !e.shiftKey) { 
+    e.preventDefault(); 
+    if(!sendButton.disabled) sendMessage(); 
+  }
 });
-sendButton.addEventListener('click', ()=>{ if(!sendButton.disabled) sendMessage(); });
+
+sendButton.addEventListener('click', () => { 
+  if(!sendButton.disabled) sendMessage(); 
+});
+
+// --- API Integration ---
+async function callAIAPI(message) {
+  try {
+    // Replace with your actual API endpoint
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: message,
+        history: chatHistory
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.response;
+
+  } catch (error) {
+    console.error('API call failed:', error);
+    throw error;
+  }
+}
 
 // --- Send message ---
-async function sendMessage(){
+async function sendMessage() {
   const message = userInput.value.trim();
   if(!message || isProcessing) return;
 
@@ -146,34 +200,44 @@ async function sendMessage(){
   sendButton.disabled = true;
   userInput.disabled = true;
   userInput.value = '';
-  userInput.style.height='auto';
+  userInput.style.height = 'auto';
 
   typingIndicator.classList.add('visible');
   renderMessage(message, true);
-  chatHistory.push({ role:'user', content:message });
+  chatHistory.push({ role: 'user', content: message });
 
   try {
-    // --- Mock API streaming response ---
-    const responseText = "Sure! Here's some `inline code` and a code block:\n```javascript\nconsole.log('Hello World!');\n```";
-    await new Promise(r => setTimeout(r, 200)); // small delay
+    // Call actual API
+    const responseText = await callAIAPI(message);
+    
+    // Render the response
     renderMessage(responseText, false);
-    chatHistory.push({ role:'assistant', content:responseText });
+    chatHistory.push({ role: 'assistant', content: responseText });
 
   } catch(err) {
-    renderMessage("Oops! Something went wrong.", false);
-    console.error(err);
+    console.error('Error:', err);
+    
+    // Fallback response if API fails
+    const fallbackResponse = "I'm having trouble connecting right now. Here's a sample response with code:\n\n```javascript\nfunction hello() {\n  console.log('Hello World!');\n}\n```\n\nAnd here's some `inline code` too!";
+    renderMessage(fallbackResponse, false);
+    chatHistory.push({ role: 'assistant', content: fallbackResponse });
+    
   } finally {
     typingIndicator.classList.remove('visible');
-    isProcessing=false;
-    userInput.disabled=false;
-    sendButton.disabled = userInput.value.trim()==='';
+    isProcessing = false;
+    userInput.disabled = false;
+    sendButton.disabled = userInput.value.trim() === '';
     if(userInput.value.trim()) sendButton.classList.add('enabled');
     userInput.focus();
   }
 }
 
 // --- Initial assistant message ---
-renderMessage(chatHistory[0].content, false);
+// Use renderChunk for the initial message to properly handle code formatting
+const initialMessageEl = document.createElement('div');
+initialMessageEl.className = 'message assistant-message visible';
+chatMessages.appendChild(initialMessageEl);
+renderChunk(chatHistory[0].content, initialMessageEl);
 
 
 
