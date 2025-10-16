@@ -73,9 +73,28 @@ function detectLanguage(content) {
   return 'text';
 }
 
-function renderMessage(content, isUser = false, isStreaming = false) {
+function createStreamingMessageElement() {
   const msgEl = document.createElement("div");
-  msgEl.className = `message ${isUser ? "user-message" : "assistant-message"} ${isUser ? 'slide-in-right' : 'slide-in-left'} ${isStreaming ? 'streaming' : ''}`;
+  msgEl.className = "message assistant-message slide-in-left streaming";
+  msgEl.innerHTML = '<div class="streaming-content"></div>';
+  chatMessages.appendChild(msgEl);
+  setTimeout(() => msgEl.classList.add('visible'), 10);
+  scrollToBottom();
+  return msgEl;
+}
+
+function updateStreamingContent(messageElement, content) {
+  const contentEl = messageElement.querySelector('.streaming-content');
+  
+
+  contentEl.textContent = content;
+  
+  scrollToBottom();
+}
+
+function renderMessage(content, isUser = false) {
+  const msgEl = document.createElement("div");
+  msgEl.className = `message ${isUser ? "user-message" : "assistant-message"} ${isUser ? 'slide-in-right' : 'slide-in-left'}`;
 
   const codeRegex = /```(\w+)?\n([\s\S]*?)```/g;
   let html = content;
@@ -97,63 +116,23 @@ function renderMessage(content, isUser = false, isStreaming = false) {
 
   html = html.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
 
-  if (!isStreaming) {
-    const lines = html.split('\n');
-    html = lines.map(line => {
-      line = line.trim();
-      if (!line) return '';
-      if (line.startsWith('<div class="code-block">')) return line;
-      return `<p>${line}</p>`;
-    }).join('\n');
-  }
+  const lines = html.split('\n');
+  html = lines.map(line => {
+    line = line.trim();
+    if (!line) return '';
+    if (line.startsWith('<div class="code-block">')) return line;
+    return `<p>${line}</p>`;
+  }).join('\n');
 
   msgEl.innerHTML = html;
   chatMessages.appendChild(msgEl);
 
-  if (!isStreaming) {
-    setTimeout(() => msgEl.classList.add('visible'), 10);
-  }
-  
+  setTimeout(() => msgEl.classList.add('visible'), 10);
   scrollToBottom();
-  
-  if (!isStreaming) {
-    highlightCodeBlocks();
-  }
+  highlightCodeBlocks();
   
   return msgEl;
 }
-
-function updateStreamingMessage(messageElement, content) {
-  const codeRegex = /```(\w+)?\n([\s\S]*?)```/g;
-  let html = content;
-  
-  html = html.replace(codeRegex, (match, lang, code) => {
-    const detectedLang = lang || detectLanguage(code);
-    const escapedCode = escapeHtml(code);
-    return `
-<div class="code-block">
-  <div class="code-header">
-    <span class="code-language">${detectedLang}</span>
-    <button class="copy-btn" title="Copy code">
-      <i class="fas fa-copy"></i>
-    </button>
-  </div>
-  <pre><code class="language-${detectedLang}">${escapedCode}</code></pre>
-</div>`;
-  });
-
-  html = html.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
-
-  messageElement.innerHTML = html;
-  
-  if (!content.includes('```') || content.endsWith('```')) {
-    highlightCodeBlocks();
-  }
-  
-  scrollToBottom();
-}
-
-renderMessage(chatHistory[0].content, false);
 
 userInput.addEventListener("input", () => {
   userInput.style.height = "auto";
@@ -224,7 +203,7 @@ async function sendMessage() {
   typingIndicator.classList.add('visible');
 
   try {
-    const streamingMessageEl = renderMessage("", false, true);
+    const streamingMessageEl = createStreamingMessageElement();
     let fullText = "";
 
     const res = await fetch("/api/chat", {
@@ -256,7 +235,7 @@ async function sendMessage() {
       for (const event of events) {
         if (event.type === 'data' && event.data && event.data.response) {
           fullText += event.data.response;
-          updateStreamingMessage(streamingMessageEl, fullText);
+          updateStreamingContent(streamingMessageEl, fullText);
         } else if (event.type === 'done') {
           doneReading = true;
           break;
@@ -264,16 +243,16 @@ async function sendMessage() {
       }
     }
 
-    streamingMessageEl.classList.remove('streaming');
-    streamingMessageEl.classList.add('visible');
-    highlightCodeBlocks();
+
+    streamingMessageEl.remove();
+    const finalMessageEl = renderMessage(fullText, false);
     
     chatHistory.push({ role: "assistant", content: fullText });
 
   } catch (err) {
     console.error("Chat error:", err);
     renderMessage(
-      "Sorry, I encountered an error while processing your request. Please try again.",
+      "Sorry, I dont feel very well. I am not able to complete your request.",
       false
     );
   } finally {
@@ -287,41 +266,5 @@ async function sendMessage() {
   }
 }
 
-const streamingStyles = `
-.message.streaming {
-  position: relative;
-}
-
-.message.streaming::after {
-  content: '▋';
-  animation: blink 1s infinite;
-  color: var(--primary);
-  margin-left: 2px;
-}
-
-@keyframes blink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
-}
-
-.message.streaming .code-block {
-  border-left: 3px solid var(--primary);
-  opacity: 0.9;
-}
-
-.message.streaming .code-language::after {
-  content: ' • Streaming';
-  font-size: 0.7em;
-  opacity: 0.7;
-}
-`;
-
-const styleSheet = document.createElement('style');
-styleSheet.textContent = streamingStyles;
-document.head.appendChild(styleSheet);
-
-
-
-
-
-
+// Initial message
+renderMessage(chatHistory[0].content, false);
