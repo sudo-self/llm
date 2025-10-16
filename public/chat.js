@@ -1,5 +1,3 @@
-// chat.js
-
 const chatMessages = document.getElementById("chat-messages");
 const userInput = document.getElementById("user-input");
 const sendButton = document.getElementById("send-button");
@@ -19,7 +17,6 @@ function escapeHtml(text) {
 
 function highlightCodeBlocks(container = chatMessages) {
   if (typeof Prism !== 'undefined') {
-    // Wait for DOM to be updated then highlight
     setTimeout(() => {
       Prism.highlightAllUnder(container);
     }, 0);
@@ -109,7 +106,7 @@ async function appendStreamingText(fullText, container) {
   container.appendChild(contentDiv);
 
   let i = 0;
-  const chunkSize = 2; // Process 2 characters at a time for smoother streaming
+  const chunkSize = 2;
   
   while(i < fullText.length) {
     const chunk = fullText.slice(0, i + chunkSize);
@@ -163,18 +160,19 @@ sendButton.addEventListener('click', () => {
   if(!sendButton.disabled) sendMessage(); 
 });
 
-// --- API Integration ---
+// --- FIXED API Integration ---
 async function callAIAPI(message) {
   try {
-    // Replace with your actual API endpoint
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        message: message,
-        history: chatHistory
+        messages: [
+          ...chatHistory,
+          { role: "user", content: message }
+        ]
       })
     });
 
@@ -182,8 +180,37 @@ async function callAIAPI(message) {
       throw new Error(`API error: ${response.status}`);
     }
 
-    const data = await response.json();
-    return data.response;
+    // Handle streaming response
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('No response body');
+    }
+
+    const decoder = new TextDecoder();
+    let fullResponse = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split('\n');
+      
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6));
+            if (data.response) {
+              fullResponse += data.response;
+            }
+          } catch (e) {
+            // Skip invalid JSON lines
+          }
+        }
+      }
+    }
+
+    return fullResponse;
 
   } catch (error) {
     console.error('API call failed:', error);
@@ -191,7 +218,7 @@ async function callAIAPI(message) {
   }
 }
 
-// --- Send message ---
+// --- FIXED Send message ---
 async function sendMessage() {
   const message = userInput.value.trim();
   if(!message || isProcessing) return;
@@ -202,7 +229,9 @@ async function sendMessage() {
   userInput.value = '';
   userInput.style.height = 'auto';
 
-  typingIndicator.classList.add('visible');
+  typingIndicator.style.display = 'flex';
+  setTimeout(() => typingIndicator.classList.add('visible'), 10);
+  
   renderMessage(message, true);
   chatHistory.push({ role: 'user', content: message });
 
@@ -217,13 +246,25 @@ async function sendMessage() {
   } catch(err) {
     console.error('Error:', err);
     
-    // Fallback response if API fails
-    const fallbackResponse = "I'm having trouble connecting right now. Here's a sample response with code:\n\n```javascript\nfunction hello() {\n  console.log('Hello World!');\n}\n```\n\nAnd here's some `inline code` too!";
+    // Better fallback response
+    const fallbackResponse = `I apologize, but I'm having trouble connecting to the AI service right now. Please try again in a moment.
+
+In the meantime, here's what I can help with:
+- Answer questions about programming
+- Help with code examples
+- Explain technical concepts
+
+Error details: ${err.message}`;
+    
     renderMessage(fallbackResponse, false);
     chatHistory.push({ role: 'assistant', content: fallbackResponse });
     
   } finally {
     typingIndicator.classList.remove('visible');
+    setTimeout(() => {
+      typingIndicator.style.display = 'none';
+    }, 300);
+    
     isProcessing = false;
     userInput.disabled = false;
     sendButton.disabled = userInput.value.trim() === '';
@@ -233,7 +274,6 @@ async function sendMessage() {
 }
 
 // --- Initial assistant message ---
-// Use renderChunk for the initial message to properly handle code formatting
 const initialMessageEl = document.createElement('div');
 initialMessageEl.className = 'message assistant-message visible';
 chatMessages.appendChild(initialMessageEl);
