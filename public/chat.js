@@ -1,3 +1,5 @@
+// chat.js
+
 const chatMessages = document.getElementById("chat-messages");
 const userInput = document.getElementById("user-input");
 const sendButton = document.getElementById("send-button");
@@ -8,26 +10,26 @@ let chatHistory = [
 ];
 let isProcessing = false;
 
-
+// Escape HTML
 function escapeHtml(text) {
   const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
 }
 
-
+// Prism highlighting
 function highlightCodeBlocks(container = chatMessages) {
   if (typeof Prism !== "undefined") {
     requestAnimationFrame(() => Prism.highlightAllUnder(container));
   }
 }
 
-
+// Scroll chat
 function scrollToBottom() {
   chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: "smooth" });
 }
 
-
+// Parse SSE streaming chunks
 function parseSSEChunk(chunk) {
   const lines = chunk.split("\n");
   const events = [];
@@ -47,7 +49,7 @@ function parseSSEChunk(chunk) {
   return events;
 }
 
-
+// Render code & text chunks
 function renderChunk(text, container) {
   const fragment = document.createDocumentFragment();
   let lastIndex = 0;
@@ -55,7 +57,7 @@ function renderChunk(text, container) {
   let match;
 
   while ((match = codeRegex.exec(text)) !== null) {
-    
+    // Text before code block
     const before = text.slice(lastIndex, match.index);
     if (before.trim()) {
       const p = document.createElement("p");
@@ -63,7 +65,7 @@ function renderChunk(text, container) {
       fragment.appendChild(p);
     }
 
-   
+    // Code block
     const wrapper = document.createElement("div");
     wrapper.className = "code-block";
 
@@ -94,7 +96,7 @@ function renderChunk(text, container) {
     lastIndex = match.index + match[0].length;
   }
 
-
+  // Remaining text
   const remaining = text.slice(lastIndex);
   if (remaining.trim()) {
     const p = document.createElement("p");
@@ -107,30 +109,36 @@ function renderChunk(text, container) {
   highlightCodeBlocks(container);
 }
 
-
-function appendStreamingText(text, container) {
-  let lastChild = container.querySelector("p:last-of-type");
-  if (!lastChild) {
-    lastChild = document.createElement("p");
-    container.appendChild(lastChild);
-  }
-  lastChild.innerHTML += escapeHtml(text).replace(/\n/g, "<br>");
-  scrollToBottom();
-  highlightCodeBlocks(container);
-}
-
-
+// Render a message (user or assistant)
 function renderMessage(content, isUser = false) {
   const msgEl = document.createElement("div");
   msgEl.className = `message ${isUser ? "user-message" : "assistant-message"} visible`;
-  if (!isUser) msgEl.classList.add("streaming");
   chatMessages.appendChild(msgEl);
-  if (isUser) renderChunk(content, msgEl);
+
+  if (isUser) {
+    renderChunk(content, msgEl);
+  } else {
+    // For assistant, start streaming empty initially
+    const p = document.createElement("p");
+    msgEl.appendChild(p);
+  }
+
   scrollToBottom();
   return msgEl;
 }
 
+// Append streaming text for SSE
+function appendStreamingText(text, container) {
+  const lastChild = container.querySelector("p:last-of-type");
+  if (!lastChild) {
+    const p = document.createElement("p");
+    container.appendChild(p);
+  }
+  renderChunk(text, container);
+  scrollToBottom();
+}
 
+// Input handling
 userInput.addEventListener("input", () => {
   userInput.style.height = "auto";
   userInput.style.height = Math.min(userInput.scrollHeight, 120) + "px";
@@ -148,12 +156,13 @@ userInput.addEventListener("keydown", (e) => {
 
 sendButton.addEventListener("click", () => { if (!sendButton.disabled) sendMessage(); });
 
-
+// Copy code buttons
 document.addEventListener("click", (e) => {
   const copyBtn = e.target.closest(".copy-btn");
   if (!copyBtn) return;
   const codeEl = copyBtn.closest(".code-block")?.querySelector("code");
   if (!codeEl) return;
+
   navigator.clipboard.writeText(codeEl.textContent).then(() => {
     const icon = copyBtn.querySelector("i");
     const originalClass = icon.className;
@@ -165,10 +174,10 @@ document.addEventListener("click", (e) => {
       icon.className = originalClass;
       copyBtn.setAttribute("title", "Copy code");
     }, 2000);
-  }).catch(err => console.error("Failed to copy text:", err));
+  }).catch(err => console.error("Failed to copy code:", err));
 });
 
-
+// Send message
 async function sendMessage() {
   const message = userInput.value.trim();
   if (!message || isProcessing) return;
@@ -183,7 +192,6 @@ async function sendMessage() {
 
   userInput.value = "";
   userInput.style.height = "auto";
-  scrollToBottom();
 
   typingIndicator.classList.add("visible");
 
@@ -213,8 +221,7 @@ async function sendMessage() {
 
       for (const event of events) {
         if (event.type === "data" && event.data?.response) {
-          const chunk = event.data.response;
-          fullText += chunk;
+          fullText += event.data.response;
           renderChunk(fullText, responseEl);
           scrollToBottom();
         }
@@ -227,7 +234,7 @@ async function sendMessage() {
 
   } catch (err) {
     console.error(err);
-    renderMessage("Sorry, I encountered an error while processing your request.", false);
+    renderMessage("Error: Unable to fetch response.", false);
   } finally {
     typingIndicator.classList.remove("visible");
     isProcessing = false;
@@ -238,8 +245,9 @@ async function sendMessage() {
   }
 }
 
-
+// Initial assistant message
 renderMessage(chatHistory[0].content, false);
+
 
 
 
