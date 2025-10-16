@@ -2,7 +2,7 @@ import { Env, ChatMessage } from "./types";
 
 const MODEL_ID = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 
-const SYSTEM_PROMPT = `You are Jesse, a helpful and friendly AI assistant. Provide concise and  accurate responses. 
+const SYSTEM_PROMPT = `You are Jesse, a helpful and friendly AI assistant. Provide concise and accurate responses. 
 
 Guidelines:
 - Be conversational but professional
@@ -14,7 +14,9 @@ Guidelines:
 function corsHeaders(origin: string) {
   const allowedOrigins = [
     "https://ai.jessejesse.com",
-    "https://www.ai.jessejesse.com"
+    "https://www.ai.jessejesse.com",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000"
   ];
   
   return {
@@ -30,7 +32,6 @@ export default {
     const url = new URL(request.url);
     const origin = request.headers.get("Origin") || "https://ai.jessejesse.com";
 
-  
     if (request.method === "OPTIONS") {
       return new Response(null, { 
         headers: {
@@ -40,11 +41,9 @@ export default {
       });
     }
 
-   
     if (url.pathname === "/" || !url.pathname.startsWith("/api/")) {
       return env.ASSETS.fetch(request);
     }
-
 
     if (url.pathname === "/api/chat") {
       if (request.method === "POST") {
@@ -94,38 +93,37 @@ async function handleChatRequest(request: Request, env: Env, origin: string): Pr
       );
     }
 
- 
     const filteredMessages = messages.filter((msg) => msg.role !== "system");
     const finalMessages = [
       { role: "system" as const, content: SYSTEM_PROMPT },
       ...filteredMessages,
     ];
 
-  
     const response = await env.AI.run(
       MODEL_ID,
       {
         messages: finalMessages,
         max_tokens: 2048,
-        stream: true, 
-      },
-      {
-        returnRawResponse: true,
+        stream: false, // Changed to false for simplicity
       }
     );
 
-    if (!response.body) {
-      throw new Error("No response body from AI model");
+    if (!response || !response.response) {
+      throw new Error("No response from AI model");
     }
 
-    return new Response(response.body, {
-      headers: {
-        "content-type": "text/event-stream",
-        "cache-control": "no-cache",
-        "connection": "keep-alive",
-        ...corsHeaders(origin),
-      },
-    });
+    return new Response(
+      JSON.stringify({ 
+        response: response.response 
+      }),
+      {
+        headers: {
+          "content-type": "application/json",
+          ...corsHeaders(origin),
+        },
+      }
+    );
+
   } catch (error: any) {
     console.error("Error processing chat request:", error);
     
