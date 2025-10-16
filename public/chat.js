@@ -10,11 +10,13 @@ let chatHistory = [
 ];
 let isProcessing = false;
 
+
 function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
 }
+
 
 function highlightCodeBlocks(container = chatMessages) {
   if (typeof Prism !== 'undefined') {
@@ -24,6 +26,7 @@ function highlightCodeBlocks(container = chatMessages) {
     });
   }
 }
+
 
 function parseSSEChunk(chunk) {
   const lines = chunk.split('\n');
@@ -41,6 +44,7 @@ function parseSSEChunk(chunk) {
   return events;
 }
 
+
 function renderMessage(content, isUser = false) {
   const msgEl = document.createElement("div");
   msgEl.className = `message ${isUser ? "user-message" : "assistant-message"} ${isUser ? 'slide-in-right' : 'slide-in-left'} visible`;
@@ -49,17 +53,38 @@ function renderMessage(content, isUser = false) {
   scrollToBottom();
 }
 
-// --- incremental streaming ---
+
 function appendStreamingText(text, container) {
 
-  let lastChild = container.lastElementChild;
-  if (!lastChild || lastChild.tagName !== 'P') {
-    lastChild = document.createElement('p');
-    container.appendChild(lastChild);
+  if (!container.querySelector(".streaming-dots")) {
+    const dotsWrapper = document.createElement("div");
+    dotsWrapper.className = "streaming-dots flex gap-1 mt-1";
+    for (let i = 0; i < 3; i++) {
+      const dot = document.createElement("div");
+      dot.className = "typing-dot";
+      dotsWrapper.appendChild(dot);
+    }
+    container.appendChild(dotsWrapper);
   }
-  lastChild.innerHTML += escapeHtml(text).replace(/\n/g, '<br>');
+
+  let lastChild = container.querySelector("p:last-of-type");
+  if (!lastChild) {
+    lastChild = document.createElement("p");
+    container.insertBefore(lastChild, container.querySelector(".streaming-dots"));
+  }
+
+  lastChild.innerHTML += escapeHtml(text).replace(/\n/g, "<br>");
   scrollToBottom();
 }
+
+
+function finishStreaming(container) {
+  container.classList.remove("streaming");
+  const dots = container.querySelector(".streaming-dots");
+  if (dots) dots.remove();
+  highlightCodeBlocks(container);
+}
+
 
 function renderChunk(text, container) {
   const fragment = document.createDocumentFragment();
@@ -68,7 +93,6 @@ function renderChunk(text, container) {
   let match;
 
   while ((match = codeRegex.exec(text)) !== null) {
-  
     const before = text.slice(lastIndex, match.index);
     if (before.trim()) {
       const p = document.createElement('p');
@@ -76,7 +100,6 @@ function renderChunk(text, container) {
       fragment.appendChild(p);
     }
 
- 
     const wrapper = document.createElement("div");
     wrapper.className = "code-block";
 
@@ -107,7 +130,6 @@ function renderChunk(text, container) {
     lastIndex = match.index + match[0].length;
   }
 
-
   const remaining = text.slice(lastIndex);
   if (remaining.trim()) {
     const p = document.createElement('p');
@@ -119,6 +141,7 @@ function renderChunk(text, container) {
   container.appendChild(fragment);
   highlightCodeBlocks(container);
 }
+
 
 userInput.addEventListener("input", () => {
   userInput.style.height = "auto";
@@ -142,6 +165,7 @@ function scrollToBottom() {
   requestAnimationFrame(() => chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' }));
 }
 
+
 document.addEventListener("click", (e) => {
   const copyBtn = e.target.closest(".copy-btn");
   if (copyBtn) {
@@ -163,6 +187,7 @@ document.addEventListener("click", (e) => {
     }).catch(err => console.error('Failed to copy text:', err));
   }
 });
+
 
 async function sendMessage() {
   const message = userInput.value.trim();
@@ -214,14 +239,13 @@ async function sendMessage() {
         if (event.type === 'data' && event.data.response) {
           const chunk = event.data.response;
           fullText += chunk;
-          appendStreamingText(chunk, responseEl); 
+          appendStreamingText(chunk, responseEl);
         }
       }
     }
 
-    responseEl.classList.remove('streaming');
+    finishStreaming(responseEl);
     chatHistory.push({ role: "assistant", content: fullText });
-    highlightCodeBlocks(responseEl); 
 
   } catch (err) {
     console.error("Chat error:", err);
@@ -237,7 +261,9 @@ async function sendMessage() {
   }
 }
 
+
 renderMessage(chatHistory[0].content, false);
+
 
 
 
