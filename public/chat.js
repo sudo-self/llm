@@ -64,7 +64,6 @@ function renderMessage(content, isUser = false) {
 }
 
 function renderChunk(text, container) {
-  // Detect code blocks and inline code
   const fragment = document.createDocumentFragment();
   let lastIndex = 0;
   const codeRegex = /```(\w+)?\n([\s\S]*?)```/g;
@@ -74,16 +73,41 @@ function renderChunk(text, container) {
     const before = text.slice(lastIndex, match.index);
     if (before.trim()) {
       const p = document.createElement('p');
-      p.innerHTML = before.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>').replace(/\n/g, '<br>');
+      // Replace inline code with span wrappers so we can attach copy buttons
+      p.innerHTML = before.replace(/`([^`]+)`/g, (_, code) => {
+        return `<span class="inline-code-wrapper"><code class="inline-code">${escapeHtml(code)}</code><button class="copy-btn inline-copy" title="Copy code"><i class="fas fa-copy"></i></button></span>`;
+      }).replace(/\n/g, '<br>');
       fragment.appendChild(p);
     }
 
-    const codeBlock = document.createElement('pre');
-    const codeEl = document.createElement('code');
+    // --- Code block wrapper with copy button ---
+    const wrapper = document.createElement("div");
+    wrapper.className = "code-block";
+
+    const header = document.createElement("div");
+    header.className = "code-header";
+
+    const langLabel = document.createElement("span");
+    langLabel.className = "code-language";
+    langLabel.textContent = match[1] || "text";
+
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "copy-btn";
+    copyBtn.setAttribute("title", "Copy code");
+    copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
+
+    header.appendChild(langLabel);
+    header.appendChild(copyBtn);
+    wrapper.appendChild(header);
+
+    const pre = document.createElement("pre");
+    const codeEl = document.createElement("code");
     codeEl.className = `language-${match[1] || 'text'}`;
     codeEl.textContent = match[2].trim();
-    codeBlock.appendChild(codeEl);
-    fragment.appendChild(codeBlock);
+    pre.appendChild(codeEl);
+
+    wrapper.appendChild(pre);
+    fragment.appendChild(wrapper);
 
     lastIndex = match.index + match[0].length;
   }
@@ -91,7 +115,9 @@ function renderChunk(text, container) {
   const remaining = text.slice(lastIndex);
   if (remaining.trim()) {
     const p = document.createElement('p');
-    p.innerHTML = remaining.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>').replace(/\n/g, '<br>');
+    p.innerHTML = remaining.replace(/`([^`]+)`/g, (_, code) => {
+      return `<span class="inline-code-wrapper"><code class="inline-code">${escapeHtml(code)}</code><button class="copy-btn inline-copy" title="Copy code"><i class="fas fa-copy"></i></button></span>`;
+    }).replace(/\n/g, '<br>');
     fragment.appendChild(p);
   }
 
@@ -130,8 +156,13 @@ function scrollToBottom() {
 document.addEventListener("click", (e) => {
   const copyBtn = e.target.closest(".copy-btn");
   if (copyBtn) {
-    const codeBlock = copyBtn.closest('.code-block') || copyBtn.closest('pre');
-    const code = codeBlock.querySelector('code').textContent;
+    const codeEl = copyBtn.closest('.inline-code-wrapper')
+      ? copyBtn.previousElementSibling
+      : copyBtn.closest('.code-block, pre').querySelector('code');
+
+    if (!codeEl) return;
+
+    const code = codeEl.textContent;
 
     navigator.clipboard.writeText(code).then(() => {
       const icon = copyBtn.querySelector('i');
@@ -223,5 +254,5 @@ async function sendMessage() {
   }
 }
 
-
 renderMessage(chatHistory[0].content, false);
+
