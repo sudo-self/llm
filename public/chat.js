@@ -239,23 +239,17 @@ async function sendMessage() {
     const decoder = new TextDecoder();
     let buffer = "";
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+   while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
 
-      buffer += decoder.decode(value, { stream: true });
+  const chunk = decoder.decode(value, { stream: true });
+  if (!chunk) continue;
 
-      const events = parseSSEChunk(buffer);
-      const lastNewline = buffer.lastIndexOf('\n');
-      if (lastNewline !== -1) buffer = buffer.slice(lastNewline + 1);
+  fullText += chunk; 
+  updateStreamingMessage(streamingMessageEl, fullText); 
+}
 
-      for (const event of events) {
-        if (event.type === 'data' && event.data.response) {
-          fullText += event.data.response;
-          updateStreamingMessage(streamingMessageEl, fullText);
-        } else if (event.type === 'done') break;
-      }
-    }
 
     const finalEvents = parseSSEChunk(buffer);
     for (const event of finalEvents) {
