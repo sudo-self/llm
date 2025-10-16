@@ -1,3 +1,4 @@
+// --- src/index.ts ---
 import { Env, ChatMessage } from "./types";
 
 const MODEL_ID = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
@@ -99,64 +100,18 @@ async function handleChatRequest(request: Request, env: Env, origin: string): Pr
       ...filteredMessages,
     ];
 
-    // Enable streaming
+    // Get the streaming response from Workers AI
     const response = await env.AI.run(
       MODEL_ID,
       {
         messages: finalMessages,
         max_tokens: 2048,
-        stream: true, // Enable streaming
+        stream: true,
       }
     );
 
-    // Create a proper streaming response
-    const stream = new ReadableStream({
-      async start(controller) {
-        try {
-          const encoder = new TextEncoder();
-          
-          // Send the response in chunks for streaming effect
-          if (response && response.response) {
-            const fullResponse = response.response;
-            const chunkSize = 3; // Characters per chunk
-            let position = 0;
-            
-            while (position < fullResponse.length) {
-              const chunk = fullResponse.slice(position, position + chunkSize);
-              const data = {
-                response: chunk,
-                type: "chunk" as const
-              };
-              
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
-              position += chunkSize;
-              
-              // Small delay for streaming effect
-              await new Promise(resolve => setTimeout(resolve, 10));
-            }
-            
-            // Send completion signal
-            const completeData = {
-              response: "",
-              type: "complete" as const
-            };
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify(completeData)}\n\n`));
-          } else {
-            throw new Error("No response from AI model");
-          }
-        } catch (error: any) {
-          const errorData = {
-            error: "Stream error",
-            message: error?.message || "Unknown error"
-          };
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify(errorData)}\n\n`));
-        } finally {
-          controller.close();
-        }
-      },
-    });
-
-    return new Response(stream, {
+    // Return the streaming response directly
+    return new Response(response, {
       headers: {
         "content-type": "text/event-stream; charset=utf-8",
         "cache-control": "no-cache",
