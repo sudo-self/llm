@@ -10,13 +10,11 @@ let chatHistory = [
 ];
 let isProcessing = false;
 
-
 function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
 }
-
 
 function highlightCodeBlocks(container = chatMessages) {
   if (typeof Prism !== 'undefined') {
@@ -26,7 +24,6 @@ function highlightCodeBlocks(container = chatMessages) {
     });
   }
 }
-
 
 function parseSSEChunk(chunk) {
   const lines = chunk.split('\n');
@@ -44,7 +41,6 @@ function parseSSEChunk(chunk) {
   return events;
 }
 
-
 function renderMessage(content, isUser = false) {
   const msgEl = document.createElement("div");
   msgEl.className = `message ${isUser ? "user-message" : "assistant-message"} ${isUser ? 'slide-in-right' : 'slide-in-left'} visible`;
@@ -53,38 +49,16 @@ function renderMessage(content, isUser = false) {
   scrollToBottom();
 }
 
-
+// --- incremental streaming ---
 function appendStreamingText(text, container) {
-
-  if (!container.querySelector(".streaming-dots")) {
-    const dotsWrapper = document.createElement("div");
-    dotsWrapper.className = "streaming-dots flex gap-1 mt-1";
-    for (let i = 0; i < 3; i++) {
-      const dot = document.createElement("div");
-      dot.className = "typing-dot";
-      dotsWrapper.appendChild(dot);
-    }
-    container.appendChild(dotsWrapper);
-  }
-
   let lastChild = container.querySelector("p:last-of-type");
   if (!lastChild) {
     lastChild = document.createElement("p");
-    container.insertBefore(lastChild, container.querySelector(".streaming-dots"));
+    container.appendChild(lastChild);
   }
-
-  lastChild.innerHTML += escapeHtml(text).replace(/\n/g, "<br>");
+  lastChild.innerHTML += escapeHtml(text).replace(/\n/g, '<br>');
   scrollToBottom();
 }
-
-
-function finishStreaming(container) {
-  container.classList.remove("streaming");
-  const dots = container.querySelector(".streaming-dots");
-  if (dots) dots.remove();
-  highlightCodeBlocks(container);
-}
-
 
 function renderChunk(text, container) {
   const fragment = document.createDocumentFragment();
@@ -142,7 +116,6 @@ function renderChunk(text, container) {
   highlightCodeBlocks(container);
 }
 
-
 userInput.addEventListener("input", () => {
   userInput.style.height = "auto";
   userInput.style.height = Math.min(userInput.scrollHeight, 120) + "px";
@@ -165,7 +138,6 @@ function scrollToBottom() {
   requestAnimationFrame(() => chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' }));
 }
 
-
 document.addEventListener("click", (e) => {
   const copyBtn = e.target.closest(".copy-btn");
   if (copyBtn) {
@@ -187,7 +159,6 @@ document.addEventListener("click", (e) => {
     }).catch(err => console.error('Failed to copy text:', err));
   }
 });
-
 
 async function sendMessage() {
   const message = userInput.value.trim();
@@ -244,8 +215,9 @@ async function sendMessage() {
       }
     }
 
-    finishStreaming(responseEl);
+    responseEl.classList.remove('streaming');
     chatHistory.push({ role: "assistant", content: fullText });
+    highlightCodeBlocks(responseEl);
 
   } catch (err) {
     console.error("Chat error:", err);
@@ -261,8 +233,9 @@ async function sendMessage() {
   }
 }
 
-
+// Render initial assistant message
 renderMessage(chatHistory[0].content, false);
+
 
 
 
