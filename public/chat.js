@@ -238,24 +238,29 @@ async function sendMessage() {
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
+    let doneReading = false;
 
-   while (true) {
-  const { done, value } = await reader.read();
-  if (done) break;
+    while (!doneReading) {
+      const { done, value } = await reader.read();
+      if (done) break;
 
-  const chunk = decoder.decode(value, { stream: true });
-  if (!chunk) continue;
+      const chunk = decoder.decode(value, { stream: true });
+      if (!chunk) continue;
 
-  fullText += chunk; 
-  updateStreamingMessage(streamingMessageEl, fullText); 
-}
+      buffer += chunk;
 
+      const events = parseSSEChunk(buffer);
+      const lastNewline = buffer.lastIndexOf('\n');
+      if (lastNewline !== -1) buffer = buffer.slice(lastNewline + 1);
 
-    const finalEvents = parseSSEChunk(buffer);
-    for (const event of finalEvents) {
-      if (event.type === 'data' && event.data.response) {
-        fullText += event.data.response;
-        updateStreamingMessage(streamingMessageEl, fullText);
+      for (const event of events) {
+        if (event.type === 'data' && event.data && event.data.response) {
+          fullText += event.data.response;
+          updateStreamingMessage(streamingMessageEl, fullText);
+        } else if (event.type === 'done') {
+          doneReading = true;
+          break;
+        }
       }
     }
 
@@ -314,10 +319,6 @@ const streamingStyles = `
 const styleSheet = document.createElement('style');
 styleSheet.textContent = streamingStyles;
 document.head.appendChild(styleSheet);
-
-
-
-
 
 
 
