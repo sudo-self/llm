@@ -6,10 +6,7 @@ const sendButton = document.getElementById("send-button");
 const typingIndicator = document.getElementById("typing-indicator");
 
 let chatHistory = [
-  {
-    role: "assistant",
-    content: "Hi! I'm J, How can I help?",
-  },
+  { role: "assistant", content: "Hi! I'm J, How can I help?" },
 ];
 let isProcessing = false;
 
@@ -22,11 +19,8 @@ function escapeHtml(text) {
 function highlightCodeBlocks(container = chatMessages) {
   if (typeof Prism !== 'undefined') {
     requestAnimationFrame(() => {
-      try {
-        Prism.highlightAllUnder(container);
-      } catch (error) {
-        console.warn('Prism highlighting failed:', error);
-      }
+      try { Prism.highlightAllUnder(container); }
+      catch (error) { console.warn('Prism highlighting failed:', error); }
     });
   }
 }
@@ -34,32 +28,36 @@ function highlightCodeBlocks(container = chatMessages) {
 function parseSSEChunk(chunk) {
   const lines = chunk.split('\n');
   const events = [];
-
   for (const line of lines) {
     if (line.startsWith('data: ')) {
       const data = line.slice(6).trim();
-      if (data === '[DONE]') {
-        events.push({ type: 'done' });
-      } else if (data) {
-        try {
-          events.push({ type: 'data', data: JSON.parse(data) });
-        } catch (err) {
-          console.warn('Failed to parse SSE data:', data, err);
-        }
+      if (data === '[DONE]') events.push({ type: 'done' });
+      else if (data) {
+        try { events.push({ type: 'data', data: JSON.parse(data) }); }
+        catch (err) { console.warn('Failed to parse SSE data:', data, err); }
       }
     }
   }
-
   return events;
 }
 
 function renderMessage(content, isUser = false) {
   const msgEl = document.createElement("div");
   msgEl.className = `message ${isUser ? "user-message" : "assistant-message"} ${isUser ? 'slide-in-right' : 'slide-in-left'} visible`;
-
   renderChunk(content, msgEl);
-
   chatMessages.appendChild(msgEl);
+  scrollToBottom();
+}
+
+// --- incremental streaming ---
+function appendStreamingText(text, container) {
+
+  let lastChild = container.lastElementChild;
+  if (!lastChild || lastChild.tagName !== 'P') {
+    lastChild = document.createElement('p');
+    container.appendChild(lastChild);
+  }
+  lastChild.innerHTML += escapeHtml(text).replace(/\n/g, '<br>');
   scrollToBottom();
 }
 
@@ -70,18 +68,15 @@ function renderChunk(text, container) {
   let match;
 
   while ((match = codeRegex.exec(text)) !== null) {
-    // Normal text before the block
+  
     const before = text.slice(lastIndex, match.index);
     if (before.trim()) {
       const p = document.createElement('p');
-      // Inline code = just <code>, no copy button
-      p.innerHTML = before.replace(/`([^`]+)`/g, (_, code) => {
-        return `<code class="inline-code">${escapeHtml(code)}</code>`;
-      }).replace(/\n/g, '<br>');
+      p.innerHTML = before.replace(/`([^`]+)`/g, (_, code) => `<code class="inline-code">${escapeHtml(code)}</code>`).replace(/\n/g, '<br>');
       fragment.appendChild(p);
     }
 
-    // --- Code block with copy button ---
+ 
     const wrapper = document.createElement("div");
     wrapper.className = "code-block";
 
@@ -106,20 +101,17 @@ function renderChunk(text, container) {
     codeEl.className = `language-${match[1] || 'text'}`;
     codeEl.textContent = match[2].trim();
     pre.appendChild(codeEl);
-
     wrapper.appendChild(pre);
-    fragment.appendChild(wrapper);
 
+    fragment.appendChild(wrapper);
     lastIndex = match.index + match[0].length;
   }
 
-  // Remaining text after last block
+
   const remaining = text.slice(lastIndex);
   if (remaining.trim()) {
     const p = document.createElement('p');
-    p.innerHTML = remaining.replace(/`([^`]+)`/g, (_, code) => {
-      return `<code class="inline-code">${escapeHtml(code)}</code>`;
-    }).replace(/\n/g, '<br>');
+    p.innerHTML = remaining.replace(/`([^`]+)`/g, (_, code) => `<code class="inline-code">${escapeHtml(code)}</code>`).replace(/\n/g, '<br>');
     fragment.appendChild(p);
   }
 
@@ -130,8 +122,7 @@ function renderChunk(text, container) {
 
 userInput.addEventListener("input", () => {
   userInput.style.height = "auto";
-  const newHeight = Math.min(userInput.scrollHeight, 120);
-  userInput.style.height = newHeight + "px";
+  userInput.style.height = Math.min(userInput.scrollHeight, 120) + "px";
 
   const hasText = userInput.value.trim() !== "";
   sendButton.disabled = !hasText || isProcessing;
@@ -145,32 +136,25 @@ userInput.addEventListener("keydown", (e) => {
   }
 });
 
-sendButton.addEventListener("click", () => {
-  if (!sendButton.disabled) sendMessage();
-});
+sendButton.addEventListener("click", () => { if (!sendButton.disabled) sendMessage(); });
 
 function scrollToBottom() {
-  requestAnimationFrame(() => {
-    chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
-  });
+  requestAnimationFrame(() => chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' }));
 }
 
 document.addEventListener("click", (e) => {
   const copyBtn = e.target.closest(".copy-btn");
   if (copyBtn) {
-    const codeEl = copyBtn.closest('.code-block, pre').querySelector('code');
+    const codeEl = copyBtn.closest('.code-block, pre')?.querySelector('code');
     if (!codeEl) return;
-
     const code = codeEl.textContent;
 
     navigator.clipboard.writeText(code).then(() => {
       const icon = copyBtn.querySelector('i');
       const originalClass = icon.className;
-
       copyBtn.classList.add('copied');
       icon.className = 'fas fa-check';
       copyBtn.setAttribute('title', 'Copied!');
-
       setTimeout(() => {
         copyBtn.classList.remove('copied');
         icon.className = originalClass;
@@ -210,7 +194,6 @@ async function sendMessage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ messages: chatHistory }),
     });
-
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
     const reader = res.body.getReader();
@@ -229,15 +212,16 @@ async function sendMessage() {
 
       for (const event of events) {
         if (event.type === 'data' && event.data.response) {
-          fullText += event.data.response;
-          renderChunk(fullText, responseEl);
-          scrollToBottom();
+          const chunk = event.data.response;
+          fullText += chunk;
+          appendStreamingText(chunk, responseEl); 
         }
       }
     }
 
     responseEl.classList.remove('streaming');
     chatHistory.push({ role: "assistant", content: fullText });
+    highlightCodeBlocks(responseEl); 
 
   } catch (err) {
     console.error("Chat error:", err);
@@ -254,5 +238,6 @@ async function sendMessage() {
 }
 
 renderMessage(chatHistory[0].content, false);
+
 
 
