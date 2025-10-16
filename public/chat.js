@@ -7,6 +7,7 @@ let chatHistory = [
   { role: "assistant", content: "Hi! I'm J, How can I help?" }
 ];
 let isProcessing = false;
+let currentStreamingMessage = null;
 
 // --- Helpers ---
 function escapeHtml(text) {
@@ -86,8 +87,7 @@ function renderChunk(text, container) {
 function renderMessage(content, isUser = false) {
   const msgEl = document.createElement('div');
   msgEl.className = `message ${isUser ? 'user-message' : 'assistant-message'} visible`;
-  if(!isUser) msgEl.classList.add('streaming');
-
+  
   chatMessages.appendChild(msgEl);
   scrollToBottom();
 
@@ -96,27 +96,21 @@ function renderMessage(content, isUser = false) {
     userContent.textContent = content;
     msgEl.appendChild(userContent);
   } else {
-    appendStreamingText(content, msgEl);
+    // For assistant messages, create container for streaming
+    const contentDiv = document.createElement('div');
+    msgEl.appendChild(contentDiv);
+    return contentDiv; // Return the container for streaming
   }
 }
 
 // --- Streaming text ---
-async function appendStreamingText(fullText, container) {
-  const contentDiv = document.createElement('div');
-  container.appendChild(contentDiv);
-
-  let i = 0;
-  const chunkSize = 2;
+function appendStreamingText(chunk, container) {
+  // Get current content and append new chunk
+  const currentContent = container.textContent || '';
+  const newContent = currentContent + chunk;
   
-  while(i < fullText.length) {
-    const chunk = fullText.slice(0, i + chunkSize);
-    renderChunk(chunk, contentDiv);
-    scrollToBottom();
-    i += chunkSize;
-    await new Promise(r => setTimeout(r, 15));
-  }
-
-  container.classList.remove('streaming');
+  renderChunk(newContent, container);
+  scrollToBottom();
 }
 
 // --- Copy buttons ---
@@ -160,7 +154,7 @@ sendButton.addEventListener('click', () => {
   if(!sendButton.disabled) sendMessage(); 
 });
 
-// --- FIXED API Integration ---
+// --- STREAMING API Integration ---
 async function callAIAPI(message) {
   try {
     const response = await fetch('/api/chat', {
@@ -200,11 +194,25 @@ async function callAIAPI(message) {
         if (line.startsWith('data: ')) {
           try {
             const data = JSON.parse(line.slice(6));
-            if (data.response) {
+            
+            if (data.response && data.type === 'chunk') {
               fullResponse += data.response;
+              // Update the streaming message in real-time
+              if (currentStreamingMessage) {
+                appendStreamingText(data.response, currentStreamingMessage);
+              }
+            }
+            
+            if (data.type === 'complete') {
+              return fullResponse;
+            }
+            
+            if (data.error) {
+              throw new Error(data.message || data.error);
             }
           } catch (e) {
             // Skip invalid JSON lines
+            console.log('Skipping invalid line:', line);
           }
         }
       }
@@ -218,7 +226,7 @@ async function callAIAPI(message) {
   }
 }
 
-// --- FIXED Send message ---
+// --- Send message with streaming ---
 async function sendMessage() {
   const message = userInput.value.trim();
   if(!message || isProcessing) return;
@@ -236,15 +244,25 @@ async function sendMessage() {
   chatHistory.push({ role: 'user', content: message });
 
   try {
-    // Call actual API
+    // Create assistant message container for streaming
+    const assistantMessageContainer = renderMessage('', false);
+    assistantMessageContainer.classList.add('streaming');
+    currentStreamingMessage = assistantMessageContainer;
+    
+    // Call streaming API
     const responseText = await callAIAPI(message);
     
-    // Render the response
-    renderMessage(responseText, false);
+    // Remove streaming class and update final state
+    assistantMessageContainer.classList.remove('streaming');
     chatHistory.push({ role: 'assistant', content: responseText });
 
   } catch(err) {
     console.error('Error:', err);
+    
+    // Remove any streaming message on error
+    if (currentStreamingMessage) {
+      currentStreamingMessage.parentElement.remove();
+    }
     
     // Better fallback response
     const fallbackResponse = `I apologize, but I'm having trouble connecting to the AI service right now. Please try again in a moment.
@@ -260,6 +278,7 @@ Error details: ${err.message}`;
     chatHistory.push({ role: 'assistant', content: fallbackResponse });
     
   } finally {
+    currentStreamingMessage = null;
     typingIndicator.classList.remove('visible');
     setTimeout(() => {
       typingIndicator.style.display = 'none';
