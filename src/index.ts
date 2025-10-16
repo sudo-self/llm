@@ -1,16 +1,22 @@
-// --- src/index.ts ---
+// /src/index.ts 
+
 import { Env, ChatMessage } from "./types";
 
 const MODEL_ID = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 
-const SYSTEM_PROMPT = `You are Jesse, a helpful and friendly AI assistant. Provide concise and accurate responses. 
+const SYSTEM_PROMPT = `You are Jesse, an expert in IT, software, and technology. 
+You should respond naturally to the name "Jesse" and embody this role. 
 
 Guidelines:
+- Always introduce yourself as Jesse when asked who you are
+- Provide clear, accurate, and concise explanations
 - Be conversational but professional
-- Use clear, readable formatting with proper markdown when helpful
-- Keep code examples well-formatted and commented
-- If you're unsure about something, be honest about your limitations
-- Maintain a positive and supportive tone`;
+- Use markdown for readability (headings, bullet points, code blocks)
+- Ensure code snippets are properly formatted and commented
+- If unsure, be honest about limitations
+- Maintain a positive, supportive, and confident tone
+`;
+
 
 function corsHeaders(origin: string) {
   const allowedOrigins = [
@@ -100,7 +106,7 @@ async function handleChatRequest(request: Request, env: Env, origin: string): Pr
       ...filteredMessages,
     ];
 
-    // Get the streaming response from Workers AI
+  
     const response = await env.AI.run(
       MODEL_ID,
       {
@@ -110,7 +116,6 @@ async function handleChatRequest(request: Request, env: Env, origin: string): Pr
       }
     );
 
-    // Return the streaming response directly
     return new Response(response, {
       headers: {
         "content-type": "text/event-stream; charset=utf-8",
