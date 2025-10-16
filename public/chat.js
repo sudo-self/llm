@@ -70,17 +70,18 @@ function renderChunk(text, container) {
   let match;
 
   while ((match = codeRegex.exec(text)) !== null) {
+    // Normal text before the block
     const before = text.slice(lastIndex, match.index);
     if (before.trim()) {
       const p = document.createElement('p');
-
+      // Inline code = just <code>, no copy button
       p.innerHTML = before.replace(/`([^`]+)`/g, (_, code) => {
-        return `<span class="inline-code-wrapper"><code class="inline-code">${escapeHtml(code)}</code><button class="copy-btn inline-copy" title="Copy code"><i class="fas fa-copy"></i></button></span>`;
+        return `<code class="inline-code">${escapeHtml(code)}</code>`;
       }).replace(/\n/g, '<br>');
       fragment.appendChild(p);
     }
 
-   
+    // --- Code block with copy button ---
     const wrapper = document.createElement("div");
     wrapper.className = "code-block";
 
@@ -112,11 +113,12 @@ function renderChunk(text, container) {
     lastIndex = match.index + match[0].length;
   }
 
+  // Remaining text after last block
   const remaining = text.slice(lastIndex);
   if (remaining.trim()) {
     const p = document.createElement('p');
     p.innerHTML = remaining.replace(/`([^`]+)`/g, (_, code) => {
-      return `<span class="inline-code-wrapper"><code class="inline-code">${escapeHtml(code)}</code><button class="copy-btn inline-copy" title="Copy code"><i class="fas fa-copy"></i></button></span>`;
+      return `<code class="inline-code">${escapeHtml(code)}</code>`;
     }).replace(/\n/g, '<br>');
     fragment.appendChild(p);
   }
@@ -156,10 +158,7 @@ function scrollToBottom() {
 document.addEventListener("click", (e) => {
   const copyBtn = e.target.closest(".copy-btn");
   if (copyBtn) {
-    const codeEl = copyBtn.closest('.inline-code-wrapper')
-      ? copyBtn.previousElementSibling
-      : copyBtn.closest('.code-block, pre').querySelector('code');
-
+    const codeEl = copyBtn.closest('.code-block, pre').querySelector('code');
     if (!codeEl) return;
 
     const code = codeEl.textContent;
@@ -255,4 +254,5 @@ async function sendMessage() {
 }
 
 renderMessage(chatHistory[0].content, false);
+
 
