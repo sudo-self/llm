@@ -10,12 +10,14 @@ let chatHistory = [
 ];
 let isProcessing = false;
 
+// Escape HTML to prevent XSS
 function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
 }
 
+// Highlight code blocks using Prism
 function highlightCodeBlocks(container = chatMessages) {
   if (typeof Prism !== 'undefined') {
     requestAnimationFrame(() => {
@@ -25,6 +27,7 @@ function highlightCodeBlocks(container = chatMessages) {
   }
 }
 
+// Parse SSE streaming chunks
 function parseSSEChunk(chunk) {
   const lines = chunk.split('\n');
   const events = [];
@@ -41,6 +44,12 @@ function parseSSEChunk(chunk) {
   return events;
 }
 
+// Scroll chat to bottom
+function scrollToBottom() {
+  requestAnimationFrame(() => chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' }));
+}
+
+// Render message (user or assistant)
 function renderMessage(content, isUser = false) {
   const msgEl = document.createElement("div");
   msgEl.className = `message ${isUser ? "user-message" : "assistant-message"} ${isUser ? 'slide-in-right' : 'slide-in-left'} visible`;
@@ -49,17 +58,7 @@ function renderMessage(content, isUser = false) {
   scrollToBottom();
 }
 
-// --- incremental streaming ---
-function appendStreamingText(text, container) {
-  let lastChild = container.querySelector("p:last-of-type");
-  if (!lastChild) {
-    lastChild = document.createElement("p");
-    container.appendChild(lastChild);
-  }
-  lastChild.innerHTML += escapeHtml(text).replace(/\n/g, '<br>');
-  scrollToBottom();
-}
-
+// Render code & text chunks
 function renderChunk(text, container) {
   const fragment = document.createDocumentFragment();
   let lastIndex = 0;
@@ -67,6 +66,7 @@ function renderChunk(text, container) {
   let match;
 
   while ((match = codeRegex.exec(text)) !== null) {
+    // Text before code block
     const before = text.slice(lastIndex, match.index);
     if (before.trim()) {
       const p = document.createElement('p');
@@ -74,6 +74,7 @@ function renderChunk(text, container) {
       fragment.appendChild(p);
     }
 
+    // Code block wrapper
     const wrapper = document.createElement("div");
     wrapper.className = "code-block";
 
@@ -104,6 +105,7 @@ function renderChunk(text, container) {
     lastIndex = match.index + match[0].length;
   }
 
+  // Remaining text after last code block
   const remaining = text.slice(lastIndex);
   if (remaining.trim()) {
     const p = document.createElement('p');
@@ -116,6 +118,19 @@ function renderChunk(text, container) {
   highlightCodeBlocks(container);
 }
 
+// Append streaming text for SSE
+function appendStreamingText(text, container) {
+  let lastChild = container.querySelector("p:last-of-type");
+  if (!lastChild) {
+    lastChild = document.createElement("p");
+    container.appendChild(lastChild);
+  }
+  lastChild.innerHTML += escapeHtml(text).replace(/\n/g, '<br>');
+  scrollToBottom();
+  highlightCodeBlocks(container);
+}
+
+// Input events
 userInput.addEventListener("input", () => {
   userInput.style.height = "auto";
   userInput.style.height = Math.min(userInput.scrollHeight, 120) + "px";
@@ -134,14 +149,11 @@ userInput.addEventListener("keydown", (e) => {
 
 sendButton.addEventListener("click", () => { if (!sendButton.disabled) sendMessage(); });
 
-function scrollToBottom() {
-  requestAnimationFrame(() => chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' }));
-}
-
+// Copy button click
 document.addEventListener("click", (e) => {
   const copyBtn = e.target.closest(".copy-btn");
   if (copyBtn) {
-    const codeEl = copyBtn.closest('.code-block, pre')?.querySelector('code');
+    const codeEl = copyBtn.closest('.code-block')?.querySelector('code');
     if (!codeEl) return;
     const code = codeEl.textContent;
 
@@ -160,6 +172,7 @@ document.addEventListener("click", (e) => {
   }
 });
 
+// Send message
 async function sendMessage() {
   const message = userInput.value.trim();
   if (!message || isProcessing) return;
@@ -235,6 +248,7 @@ async function sendMessage() {
 
 // Render initial assistant message
 renderMessage(chatHistory[0].content, false);
+
 
 
 
