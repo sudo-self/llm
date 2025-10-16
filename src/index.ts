@@ -99,30 +99,71 @@ async function handleChatRequest(request: Request, env: Env, origin: string): Pr
       ...filteredMessages,
     ];
 
+    // Enable streaming
     const response = await env.AI.run(
       MODEL_ID,
       {
         messages: finalMessages,
         max_tokens: 2048,
-        stream: false, // Changed to false for simplicity
+        stream: true, // Enable streaming
       }
     );
 
-    if (!response || !response.response) {
-      throw new Error("No response from AI model");
-    }
+    // Create a proper streaming response
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          const encoder = new TextEncoder();
+          
+          // Send the response in chunks for streaming effect
+          if (response && response.response) {
+            const fullResponse = response.response;
+            const chunkSize = 3; // Characters per chunk
+            let position = 0;
+            
+            while (position < fullResponse.length) {
+              const chunk = fullResponse.slice(position, position + chunkSize);
+              const data = {
+                response: chunk,
+                type: "chunk" as const
+              };
+              
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+              position += chunkSize;
+              
+              // Small delay for streaming effect
+              await new Promise(resolve => setTimeout(resolve, 10));
+            }
+            
+            // Send completion signal
+            const completeData = {
+              response: "",
+              type: "complete" as const
+            };
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(completeData)}\n\n`));
+          } else {
+            throw new Error("No response from AI model");
+          }
+        } catch (error: any) {
+          const errorData = {
+            error: "Stream error",
+            message: error?.message || "Unknown error"
+          };
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(errorData)}\n\n`));
+        } finally {
+          controller.close();
+        }
+      },
+    });
 
-    return new Response(
-      JSON.stringify({ 
-        response: response.response 
-      }),
-      {
-        headers: {
-          "content-type": "application/json",
-          ...corsHeaders(origin),
-        },
-      }
-    );
+    return new Response(stream, {
+      headers: {
+        "content-type": "text/event-stream; charset=utf-8",
+        "cache-control": "no-cache",
+        "connection": "keep-alive",
+        ...corsHeaders(origin),
+      },
+    });
 
   } catch (error: any) {
     console.error("Error processing chat request:", error);
