@@ -1,24 +1,20 @@
+
 const chatMessages = document.getElementById("chat-messages");
 const userInput = document.getElementById("user-input");
 const sendButton = document.getElementById("send-button");
 const typingIndicator = document.getElementById("typing-indicator");
 
 let chatHistory = [
-  {
-    role: "assistant",
-    content: "Hi! I'm Jesse, How can I help?",
-  },
+  { role: "assistant", content: "Hi! I'm Jesse, How can I help?" },
 ];
 let isProcessing = false;
 
-// Enhanced escape function for better security
 function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
 }
 
-// Improved code highlighting with better error handling
 function highlightCodeBlocks() {
   if (typeof Prism !== 'undefined') {
     requestAnimationFrame(() => {
@@ -31,14 +27,13 @@ function highlightCodeBlocks() {
   }
 }
 
-// SSE parsing helper function
 function parseSSEChunk(chunk) {
   const lines = chunk.split('\n');
   const events = [];
 
   for (const line of lines) {
     if (line.startsWith('data: ')) {
-      const data = line.slice(6).trim(); // Remove 'data: ' prefix
+      const data = line.slice(6).trim();
       if (data === '[DONE]') {
         events.push({ type: 'done' });
       } else if (data) {
@@ -50,25 +45,20 @@ function parseSSEChunk(chunk) {
       }
     }
   }
-
   return events;
 }
 
-// Render initial welcome message
 renderMessage(chatHistory[0].content, false);
 
-// Enhanced input handling with better UX
 userInput.addEventListener("input", () => {
   userInput.style.height = "auto";
-  const newHeight = Math.min(userInput.scrollHeight, 120);
-  userInput.style.height = newHeight + "px";
-  
+  userInput.style.height = Math.min(userInput.scrollHeight, 120) + "px";
+
   const hasText = userInput.value.trim() !== "";
   sendButton.disabled = !hasText || isProcessing;
   sendButton.classList.toggle("enabled", hasText && !isProcessing);
 });
 
-// Improved keyboard handling
 userInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
@@ -76,93 +66,77 @@ userInput.addEventListener("keydown", (e) => {
   }
 });
 
-// Enhanced send button interaction
 sendButton.addEventListener("click", () => {
   if (!sendButton.disabled) sendMessage();
 });
 
-// Smooth scrolling with offset
 function scrollToBottom() {
   requestAnimationFrame(() => {
-    chatMessages.scrollTo({
-      top: chatMessages.scrollHeight,
-      behavior: 'smooth'
-    });
+    chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
   });
 }
 
-// Enhanced message rendering with better formatting
 function renderMessage(content, isUser = false) {
   const msgEl = document.createElement("div");
   msgEl.className = `message ${isUser ? "user-message" : "assistant-message"} ${isUser ? 'slide-in-right' : 'slide-in-left'}`;
 
-  // Process code blocks with improved regex
   const codeRegex = /```(\w+)?\n([\s\S]*?)```/g;
   let html = content.replace(codeRegex, (match, lang, code) => {
     const safeLang = lang || "text";
-    const escapedCode = escapeHtml(code.trim());
+    const escapedCode = escapeHtml(code);
     return `
-      <div class="code-block">
-        <div class="code-header">
-          <span class="code-language">${safeLang}</span>
-          <button class="copy-btn" title="Copy code">
-            <i class="fas fa-copy"></i>
-          </button>
-        </div>
-        <pre><code class="language-${safeLang}">${escapedCode}</code></pre>
-      </div>
-    `;
+<div class="code-block">
+  <div class="code-header">
+    <span class="code-language">${safeLang}</span>
+    <button class="copy-btn" title="Copy code">
+      <i class="fas fa-copy"></i>
+    </button>
+  </div>
+  <pre><code class="language-${safeLang}">${escapedCode}</code></pre>
+</div>`;
   });
 
-  // Process inline code
-  html = html.replace(
-    /`([^`]+)`/g,
-    '<code class="inline-code">$1</code>'
-  );
+  html = html.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
 
-  // Process line breaks and paragraphs
-  html = html.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
-  html = `<p>${html}</p>`;
+  const lines = html.split('\n');
+  html = lines.map(line => {
+    line = line.trim();
+    if (!line) return '';
+    if (line.startsWith('<div class="code-block">')) return line;
+    return `<p>${line}</p>`;
+  }).join('\n');
 
   msgEl.innerHTML = html;
   chatMessages.appendChild(msgEl);
-  
-  // Add subtle animation
-  setTimeout(() => {
-    msgEl.classList.add('visible');
-  }, 10);
-  
+
+  setTimeout(() => msgEl.classList.add('visible'), 10);
   scrollToBottom();
   highlightCodeBlocks();
 }
 
-// Enhanced copy functionality with better feedback
 document.addEventListener("click", (e) => {
   const copyBtn = e.target.closest(".copy-btn");
-  if (copyBtn) {
-    const codeBlock = copyBtn.closest('.code-block');
-    const code = codeBlock.querySelector('code').textContent;
-    
-    navigator.clipboard.writeText(code).then(() => {
-      const icon = copyBtn.querySelector('i');
-      const originalClass = icon.className;
-      
-      copyBtn.classList.add('copied');
-      icon.className = 'fas fa-check';
-      copyBtn.setAttribute('title', 'Copied!');
-      
-      setTimeout(() => {
-        copyBtn.classList.remove('copied');
-        icon.className = originalClass;
-        copyBtn.setAttribute('title', 'Copy code');
-      }, 2000);
-    }).catch(err => {
-      console.error('Failed to copy text: ', err);
-    });
-  }
+  if (!copyBtn) return;
+
+  const codeBlock = copyBtn.closest('.code-block');
+  const code = codeBlock.querySelector('code').textContent;
+
+  navigator.clipboard.writeText(code).then(() => {
+    const icon = copyBtn.querySelector('i');
+    const originalClass = icon.className;
+
+    copyBtn.classList.add('copied');
+    icon.className = 'fas fa-check';
+    copyBtn.setAttribute('title', 'Copied!');
+
+    setTimeout(() => {
+      copyBtn.classList.remove('copied');
+      icon.className = originalClass;
+      copyBtn.setAttribute('title', 'Copy code');
+    }, 2000);
+  }).catch(err => console.error('Failed to copy text:', err));
 });
 
-// Enhanced send message function with proper SSE handling
 async function sendMessage() {
   const message = userInput.value.trim();
   if (!message || isProcessing) return;
@@ -172,16 +146,13 @@ async function sendMessage() {
   userInput.disabled = true;
   sendButton.classList.remove('enabled');
 
-  // Add user message to chat
   renderMessage(message, true);
   chatHistory.push({ role: "user", content: message });
 
-  // Clear and reset input
   userInput.value = "";
   userInput.style.height = "auto";
   scrollToBottom();
 
-  // Show typing indicator
   typingIndicator.style.display = "flex";
   typingIndicator.classList.add('visible');
 
@@ -201,9 +172,7 @@ async function sendMessage() {
       body: JSON.stringify({ messages: chatHistory }),
     });
 
-    if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
-    }
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
@@ -214,32 +183,21 @@ async function sendMessage() {
       const { done, value } = await reader.read();
       if (done) break;
 
-      // Add new chunk to buffer
       buffer += decoder.decode(value, { stream: true });
-      
-      // Parse SSE events from buffer
-      const events = parseSSEChunk(buffer);
-      
-      // Reset buffer for next chunk - keep only incomplete lines
-      const lastNewline = buffer.lastIndexOf('\n');
-      if (lastNewline !== -1) {
-        buffer = buffer.slice(lastNewline + 1);
-      }
 
-      // Process all complete events
+      const events = parseSSEChunk(buffer);
+      const lastNewline = buffer.lastIndexOf('\n');
+      if (lastNewline !== -1) buffer = buffer.slice(lastNewline + 1);
+
       for (const event of events) {
         if (event.type === 'data' && event.data.response) {
           fullText += event.data.response;
           pre.textContent = fullText;
           scrollToBottom();
-        } else if (event.type === 'done') {
-          // Stream completed
-          break;
-        }
+        } else if (event.type === 'done') break;
       }
     }
 
-    // Process any remaining data in buffer
     const finalEvents = parseSSEChunk(buffer);
     for (const event of finalEvents) {
       if (event.type === 'data' && event.data.response) {
@@ -248,11 +206,10 @@ async function sendMessage() {
       }
     }
 
-    // Remove streaming element and render final message
     responseEl.remove();
     renderMessage(fullText, false);
     chatHistory.push({ role: "assistant", content: fullText });
-    
+
   } catch (err) {
     console.error("Chat error:", err);
     renderMessage(
@@ -265,9 +222,7 @@ async function sendMessage() {
     isProcessing = false;
     userInput.disabled = false;
     sendButton.disabled = userInput.value.trim() === "";
-    if (userInput.value.trim()) {
-      sendButton.classList.add('enabled');
-    }
+    if (userInput.value.trim()) sendButton.classList.add('enabled');
     userInput.focus();
   }
 }
