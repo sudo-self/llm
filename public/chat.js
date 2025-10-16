@@ -4,299 +4,273 @@ const sendButton = document.getElementById("send-button");
 const typingIndicator = document.getElementById("typing-indicator");
 
 let chatHistory = [
-  { role: "assistant", content: "Hi! I'm J, How can I help?" }
+  {
+    role: "assistant",
+    content: "Hi! I'm Jesse, How can I help?",
+  },
 ];
 let isProcessing = false;
-let currentStreamingMessage = null;
 
-// --- Helpers ---
+// Enhanced escape function for better security
 function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
 }
 
-function highlightCodeBlocks(container = chatMessages) {
+// Improved code highlighting with better error handling
+function highlightCodeBlocks() {
   if (typeof Prism !== 'undefined') {
-    setTimeout(() => {
-      Prism.highlightAllUnder(container);
-    }, 0);
+    requestAnimationFrame(() => {
+      try {
+        Prism.highlightAllUnder(chatMessages);
+      } catch (error) {
+        console.warn('Prism highlighting failed:', error);
+      }
+    });
   }
 }
 
-function scrollToBottom() {
-  chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
-}
+// SSE parsing helper function
+function parseSSEChunk(chunk) {
+  const lines = chunk.split('\n');
+  const events = [];
 
-// --- Rendering ---
-function renderChunk(text, container) {
-  const fragment = document.createDocumentFragment();
-  let lastIndex = 0;
-  const codeRegex = /```(\w+)?\n([\s\S]*?)```/g;
-  let match;
-
-  while ((match = codeRegex.exec(text)) !== null) {
-    const before = text.slice(lastIndex, match.index);
-    if(before.trim()) {
-      const p = document.createElement('p');
-      p.innerHTML = before.replace(/`([^`]+)`/g, (_, code) => `<code class="inline-code">${escapeHtml(code)}</code>`).replace(/\n/g,'<br>');
-      fragment.appendChild(p);
+  for (const line of lines) {
+    if (line.startsWith('data: ')) {
+      const data = line.slice(6).trim(); // Remove 'data: ' prefix
+      if (data === '[DONE]') {
+        events.push({ type: 'done' });
+      } else if (data) {
+        try {
+          events.push({ type: 'data', data: JSON.parse(data) });
+        } catch (err) {
+          console.warn('Failed to parse SSE data:', data, err);
+        }
+      }
     }
-
-    const wrapper = document.createElement('div');
-    wrapper.className = 'code-block';
-
-    const header = document.createElement('div');
-    header.className = 'code-header';
-
-    const langLabel = document.createElement('span');
-    langLabel.className = 'code-language';
-    langLabel.textContent = match[1] || 'text';
-
-    const copyBtn = document.createElement('button');
-    copyBtn.className='copy-btn';
-    copyBtn.innerHTML='<i class="fas fa-copy"></i>';
-
-    header.appendChild(langLabel);
-    header.appendChild(copyBtn);
-    wrapper.appendChild(header);
-
-    const pre = document.createElement('pre');
-    const codeEl = document.createElement('code');
-    codeEl.className = `language-${match[1]||'text'}`;
-    codeEl.textContent = match[2].trim();
-    pre.appendChild(codeEl);
-    wrapper.appendChild(pre);
-    fragment.appendChild(wrapper);
-
-    lastIndex = match.index + match[0].length;
   }
 
-  const remaining = text.slice(lastIndex);
-  if(remaining.trim()) {
-    const p = document.createElement('p');
-    p.innerHTML = remaining.replace(/`([^`]+)`/g, (_, code) => `<code class="inline-code">${escapeHtml(code)}</code>`).replace(/\n/g,'<br>');
-    fragment.appendChild(p);
-  }
-
-  container.innerHTML = '';
-  container.appendChild(fragment);
-  highlightCodeBlocks(container);
+  return events;
 }
 
-function renderMessage(content, isUser = false) {
-  const msgEl = document.createElement('div');
-  msgEl.className = `message ${isUser ? 'user-message' : 'assistant-message'} visible`;
-  
-  chatMessages.appendChild(msgEl);
-  scrollToBottom();
+// Render initial welcome message
+renderMessage(chatHistory[0].content, false);
 
-  if(isUser) {
-    const userContent = document.createElement('div');
-    userContent.textContent = content;
-    msgEl.appendChild(userContent);
-  } else {
-    // For assistant messages, create container for streaming
-    const contentDiv = document.createElement('div');
-    msgEl.appendChild(contentDiv);
-    return contentDiv; // Return the container for streaming
-  }
-}
-
-// --- Streaming text ---
-function appendStreamingText(chunk, container) {
-  // Get current content and append new chunk
-  const currentContent = container.textContent || '';
-  const newContent = currentContent + chunk;
+// Enhanced input handling with better UX
+userInput.addEventListener("input", () => {
+  userInput.style.height = "auto";
+  const newHeight = Math.min(userInput.scrollHeight, 120);
+  userInput.style.height = newHeight + "px";
   
-  renderChunk(newContent, container);
-  scrollToBottom();
-}
-
-// --- Copy buttons ---
-document.addEventListener('click', e => {
-  const btn = e.target.closest('.copy-btn');
-  if(!btn) return;
-  
-  const codeBlock = btn.closest('.code-block');
-  const codeEl = codeBlock?.querySelector('code');
-  if(!codeEl) return;
-  
-  navigator.clipboard.writeText(codeEl.textContent).then(() => {
-    const icon = btn.querySelector('i');
-    btn.classList.add('copied');
-    icon.classList.replace('fa-copy', 'fa-check');
-    
-    setTimeout(() => {
-      btn.classList.remove('copied');
-      icon.classList.replace('fa-check', 'fa-copy');
-    }, 2000);
-  });
-});
-
-// --- Input handling ---
-userInput.addEventListener('input', () => {
-  userInput.style.height = 'auto';
-  userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px';
-  const hasText = userInput.value.trim() !== '';
+  const hasText = userInput.value.trim() !== "";
   sendButton.disabled = !hasText || isProcessing;
-  sendButton.classList.toggle('enabled', hasText && !isProcessing);
+  sendButton.classList.toggle("enabled", hasText && !isProcessing);
 });
 
-userInput.addEventListener('keydown', e => {
-  if(e.key === 'Enter' && !e.shiftKey) { 
-    e.preventDefault(); 
-    if(!sendButton.disabled) sendMessage(); 
+// Improved keyboard handling
+userInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    if (!sendButton.disabled) sendMessage();
   }
 });
 
-sendButton.addEventListener('click', () => { 
-  if(!sendButton.disabled) sendMessage(); 
+// Enhanced send button interaction
+sendButton.addEventListener("click", () => {
+  if (!sendButton.disabled) sendMessage();
 });
 
-// --- STREAMING API Integration ---
-async function callAIAPI(message) {
+// Smooth scrolling with offset
+function scrollToBottom() {
+  requestAnimationFrame(() => {
+    chatMessages.scrollTo({
+      top: chatMessages.scrollHeight,
+      behavior: 'smooth'
+    });
+  });
+}
+
+// Enhanced message rendering with better formatting
+function renderMessage(content, isUser = false) {
+  const msgEl = document.createElement("div");
+  msgEl.className = `message ${isUser ? "user-message" : "assistant-message"} ${isUser ? 'slide-in-right' : 'slide-in-left'}`;
+
+  // Process code blocks with improved regex
+  const codeRegex = /```(\w+)?\n([\s\S]*?)```/g;
+  let html = content.replace(codeRegex, (match, lang, code) => {
+    const safeLang = lang || "text";
+    const escapedCode = escapeHtml(code.trim());
+    return `
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-language">${safeLang}</span>
+          <button class="copy-btn" title="Copy code">
+            <i class="fas fa-copy"></i>
+          </button>
+        </div>
+        <pre><code class="language-${safeLang}">${escapedCode}</code></pre>
+      </div>
+    `;
+  });
+
+  // Process inline code
+  html = html.replace(
+    /`([^`]+)`/g,
+    '<code class="inline-code">$1</code>'
+  );
+
+  // Process line breaks and paragraphs
+  html = html.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+  html = `<p>${html}</p>`;
+
+  msgEl.innerHTML = html;
+  chatMessages.appendChild(msgEl);
+  
+  // Add subtle animation
+  setTimeout(() => {
+    msgEl.classList.add('visible');
+  }, 10);
+  
+  scrollToBottom();
+  highlightCodeBlocks();
+}
+
+// Enhanced copy functionality with better feedback
+document.addEventListener("click", (e) => {
+  const copyBtn = e.target.closest(".copy-btn");
+  if (copyBtn) {
+    const codeBlock = copyBtn.closest('.code-block');
+    const code = codeBlock.querySelector('code').textContent;
+    
+    navigator.clipboard.writeText(code).then(() => {
+      const icon = copyBtn.querySelector('i');
+      const originalClass = icon.className;
+      
+      copyBtn.classList.add('copied');
+      icon.className = 'fas fa-check';
+      copyBtn.setAttribute('title', 'Copied!');
+      
+      setTimeout(() => {
+        copyBtn.classList.remove('copied');
+        icon.className = originalClass;
+        copyBtn.setAttribute('title', 'Copy code');
+      }, 2000);
+    }).catch(err => {
+      console.error('Failed to copy text: ', err);
+    });
+  }
+});
+
+// Enhanced send message function with proper SSE handling
+async function sendMessage() {
+  const message = userInput.value.trim();
+  if (!message || isProcessing) return;
+
+  isProcessing = true;
+  sendButton.disabled = true;
+  userInput.disabled = true;
+  sendButton.classList.remove('enabled');
+
+  // Add user message to chat
+  renderMessage(message, true);
+  chatHistory.push({ role: "user", content: message });
+
+  // Clear and reset input
+  userInput.value = "";
+  userInput.style.height = "auto";
+  scrollToBottom();
+
+  // Show typing indicator
+  typingIndicator.style.display = "flex";
+  typingIndicator.classList.add('visible');
+
   try {
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        messages: [
-          ...chatHistory,
-          { role: "user", content: message }
-        ]
-      })
+    const responseEl = document.createElement("div");
+    responseEl.className = "message assistant-message streaming";
+    const pre = document.createElement("pre");
+    pre.style.whiteSpace = "pre-wrap";
+    pre.style.wordBreak = "break-word";
+    responseEl.appendChild(pre);
+    chatMessages.appendChild(responseEl);
+    scrollToBottom();
+
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: chatHistory }),
     });
 
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
     }
 
-    // Handle streaming response
-    const reader = response.body?.getReader();
-    if (!reader) {
-      throw new Error('No response body');
-    }
-
+    const reader = res.body.getReader();
     const decoder = new TextDecoder();
-    let fullResponse = '';
+    let fullText = "";
+    let buffer = "";
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
-      const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split('\n');
+      // Add new chunk to buffer
+      buffer += decoder.decode(value, { stream: true });
       
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          try {
-            const data = JSON.parse(line.slice(6));
-            
-            if (data.response && data.type === 'chunk') {
-              fullResponse += data.response;
-              // Update the streaming message in real-time
-              if (currentStreamingMessage) {
-                appendStreamingText(data.response, currentStreamingMessage);
-              }
-            }
-            
-            if (data.type === 'complete') {
-              return fullResponse;
-            }
-            
-            if (data.error) {
-              throw new Error(data.message || data.error);
-            }
-          } catch (e) {
-            // Skip invalid JSON lines
-            console.log('Skipping invalid line:', line);
-          }
+      // Parse SSE events from buffer
+      const events = parseSSEChunk(buffer);
+      
+      // Reset buffer for next chunk - keep only incomplete lines
+      const lastNewline = buffer.lastIndexOf('\n');
+      if (lastNewline !== -1) {
+        buffer = buffer.slice(lastNewline + 1);
+      }
+
+      // Process all complete events
+      for (const event of events) {
+        if (event.type === 'data' && event.data.response) {
+          fullText += event.data.response;
+          pre.textContent = fullText;
+          scrollToBottom();
+        } else if (event.type === 'done') {
+          // Stream completed
+          break;
         }
       }
     }
 
-    return fullResponse;
-
-  } catch (error) {
-    console.error('API call failed:', error);
-    throw error;
-  }
-}
-
-// --- Send message with streaming ---
-async function sendMessage() {
-  const message = userInput.value.trim();
-  if(!message || isProcessing) return;
-
-  isProcessing = true;
-  sendButton.disabled = true;
-  userInput.disabled = true;
-  userInput.value = '';
-  userInput.style.height = 'auto';
-
-  typingIndicator.style.display = 'flex';
-  setTimeout(() => typingIndicator.classList.add('visible'), 10);
-  
-  renderMessage(message, true);
-  chatHistory.push({ role: 'user', content: message });
-
-  try {
-    // Create assistant message container for streaming
-    const assistantMessageContainer = renderMessage('', false);
-    assistantMessageContainer.classList.add('streaming');
-    currentStreamingMessage = assistantMessageContainer;
-    
-    // Call streaming API
-    const responseText = await callAIAPI(message);
-    
-    // Remove streaming class and update final state
-    assistantMessageContainer.classList.remove('streaming');
-    chatHistory.push({ role: 'assistant', content: responseText });
-
-  } catch(err) {
-    console.error('Error:', err);
-    
-    // Remove any streaming message on error
-    if (currentStreamingMessage) {
-      currentStreamingMessage.parentElement.remove();
+    // Process any remaining data in buffer
+    const finalEvents = parseSSEChunk(buffer);
+    for (const event of finalEvents) {
+      if (event.type === 'data' && event.data.response) {
+        fullText += event.data.response;
+        pre.textContent = fullText;
+      }
     }
-    
-    // Better fallback response
-    const fallbackResponse = `I apologize, but I'm having trouble connecting to the AI service right now. Please try again in a moment.
 
-In the meantime, here's what I can help with:
-- Answer questions about programming
-- Help with code examples
-- Explain technical concepts
-
-Error details: ${err.message}`;
+    // Remove streaming element and render final message
+    responseEl.remove();
+    renderMessage(fullText, false);
+    chatHistory.push({ role: "assistant", content: fullText });
     
-    renderMessage(fallbackResponse, false);
-    chatHistory.push({ role: 'assistant', content: fallbackResponse });
-    
+  } catch (err) {
+    console.error("Chat error:", err);
+    renderMessage(
+      "Sorry, I encountered an error while processing your request. Please try again.",
+      false
+    );
   } finally {
-    currentStreamingMessage = null;
+    typingIndicator.style.display = "none";
     typingIndicator.classList.remove('visible');
-    setTimeout(() => {
-      typingIndicator.style.display = 'none';
-    }, 300);
-    
     isProcessing = false;
     userInput.disabled = false;
-    sendButton.disabled = userInput.value.trim() === '';
-    if(userInput.value.trim()) sendButton.classList.add('enabled');
+    sendButton.disabled = userInput.value.trim() === "";
+    if (userInput.value.trim()) {
+      sendButton.classList.add('enabled');
+    }
     userInput.focus();
   }
 }
-
-// --- Initial assistant message ---
-const initialMessageEl = document.createElement('div');
-initialMessageEl.className = 'message assistant-message visible';
-chatMessages.appendChild(initialMessageEl);
-renderChunk(chatHistory[0].content, initialMessageEl);
 
 
 
