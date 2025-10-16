@@ -8,7 +8,7 @@ const typingIndicator = document.getElementById("typing-indicator");
 let chatHistory = [
   {
     role: "assistant",
-    content: "Hi! I'm J, How can I help you today?",
+    content: "Hi! I'm J, How can I help?",
   },
 ];
 let isProcessing = false;
@@ -73,14 +73,14 @@ function renderChunk(text, container) {
     const before = text.slice(lastIndex, match.index);
     if (before.trim()) {
       const p = document.createElement('p');
-      // Replace inline code with span wrappers so we can attach copy buttons
+
       p.innerHTML = before.replace(/`([^`]+)`/g, (_, code) => {
         return `<span class="inline-code-wrapper"><code class="inline-code">${escapeHtml(code)}</code><button class="copy-btn inline-copy" title="Copy code"><i class="fas fa-copy"></i></button></span>`;
       }).replace(/\n/g, '<br>');
       fragment.appendChild(p);
     }
 
-    // --- Code block wrapper with copy button ---
+   
     const wrapper = document.createElement("div");
     wrapper.className = "code-block";
 
