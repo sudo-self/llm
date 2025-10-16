@@ -1,3 +1,5 @@
+<!doctype html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -11,12 +13,11 @@
 
 
   <link href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism-tomorrow.css" rel="stylesheet" />
-  
+
   <script src="https://cdn.tailwindcss.com"></script>
-  
+
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-
 
   <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-javascript.min.js"></script>
@@ -26,8 +27,6 @@
   <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-bash.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-css.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-markup.min.js"></script>
-
-
 
   <style>
     :root {
@@ -44,10 +43,14 @@
       --success: #10b981;
     }
 
-    * { 
+    * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+    }
+
+    html, body {
+      height: 100%;
     }
 
     body {
@@ -65,7 +68,6 @@
       color: var(--text-light);
     }
 
-  
     header {
       background: rgba(15, 23, 42, 0.8);
       backdrop-filter: blur(20px);
@@ -126,31 +128,42 @@
       gap: 0.5rem;
     }
 
+  
     .icon-btn {
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: var(--text-dark);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: inherit;
       padding: 0.5rem;
       border-radius: 8px;
-      transition: all 0.2s ease;
-      display: flex;
+      transition: all 0.18s ease;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
+      cursor: pointer;
+      min-width: 40px;
+      min-height: 40px;
+    }
+
+    .icon-btn i {
+      font-size: 1.125rem; 
+      line-height: 1;
+      display: block;
+      color: currentColor;
     }
 
     body.light-mode .icon-btn {
-      background: rgba(0, 0, 0, 0.05);
+      background: rgba(0, 0, 0, 0.03);
       border: 1px solid var(--border-light);
       color: var(--text-light);
     }
 
-    .icon-btn:hover {
+    .icon-btn:hover, .icon-btn:focus {
       background: var(--primary);
       border-color: var(--primary);
       color: white;
       transform: translateY(-1px);
+      outline: none;
     }
-
 
     .chat-container {
       max-width: 800px;
@@ -169,7 +182,6 @@
       flex-direction: column;
       gap: 1rem;
     }
-
 
     .message {
       max-width: 85%;
@@ -198,9 +210,9 @@
 
     .assistant-message {
       align-self: flex-start;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.06);
       backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.04);
       color: var(--text-dark);
       border-bottom-left-radius: 0.5rem;
     }
@@ -212,12 +224,24 @@
     }
 
     .message.streaming {
-      background: linear-gradient(90deg, 
-        rgba(255, 255, 255, 0.15) 0%, 
-        rgba(255, 255, 255, 0.1) 50%, 
-        rgba(255, 255, 255, 0.15) 100%);
+      background: linear-gradient(90deg,
+        rgba(255, 255, 255, 0.12) 0%,
+        rgba(255, 255, 255, 0.06) 50%,
+        rgba(255, 255, 255, 0.12) 100%);
+      position: relative;
     }
 
+    .message.streaming::after {
+      content: '▊';
+      animation: blink 1s infinite;
+      color: var(--primary);
+      margin-left: 2px;
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
 
     .message-input-container {
       background: rgba(15, 23, 42, 0.8);
@@ -242,7 +266,7 @@
     }
 
     #user-input {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.06);
       border: 2px solid transparent;
       color: var(--text-dark);
       border-radius: 1.5rem;
@@ -254,22 +278,23 @@
       flex: 1;
       transition: all 0.2s ease;
       backdrop-filter: blur(10px);
+      overflow-y: auto; 
     }
 
     body.light-mode #user-input {
-      background: rgba(0, 0, 0, 0.05);
+      background: rgba(0, 0, 0, 0.03);
       color: var(--text-light);
     }
 
     #user-input:focus {
       outline: none;
       border-color: var(--primary);
-      background: rgba(255, 255, 255, 0.15);
-      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+      background: rgba(255, 255, 255, 0.12);
+      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.08);
     }
 
     body.light-mode #user-input:focus {
-      background: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.95);
     }
 
     #send-button {
@@ -285,6 +310,7 @@
       transition: all 0.2s ease;
       cursor: pointer;
       opacity: 0.6;
+      border: 0;
     }
 
     #send-button.enabled {
@@ -301,9 +327,8 @@
       transform: scale(0.95);
     }
 
- 
     #typing-indicator {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.03);
       backdrop-filter: blur(10px);
       border-top: 1px solid var(--border-dark);
       padding: 1rem 1.5rem;
@@ -316,10 +341,11 @@
 
     #typing-indicator.visible {
       opacity: 1;
+      display: flex;
     }
 
     body.light-mode #typing-indicator {
-      background: rgba(0, 0, 0, 0.05);
+      background: rgba(0, 0, 0, 0.03);
       border-top: 1px solid var(--border-light);
     }
 
@@ -343,7 +369,6 @@
       0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
       40% { transform: scale(1); opacity: 1; }
     }
-
 
     .code-block {
       position: relative;
@@ -411,11 +436,11 @@
     .inline-code {
       font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
       font-size: 0.875rem;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.08);
       color: #fbbf24;
       padding: 0.125rem 0.375rem;
       border-radius: 0.25rem;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     body.light-mode .code-block {
@@ -448,7 +473,6 @@
       border: 1px solid #e5e7eb;
     }
 
-
     footer {
       background: rgba(15, 23, 42, 0.8);
       backdrop-filter: blur(20px);
@@ -473,7 +497,6 @@
       color: var(--primary-dark);
     }
 
- 
     .chat-messages::-webkit-scrollbar {
       width: 6px;
     }
@@ -483,33 +506,32 @@
     }
 
     .chat-messages::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.12);
       border-radius: 3px;
     }
 
     .chat-messages::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.18);
     }
-
 
     @media (max-width: 768px) {
       .message {
         max-width: 90%;
         padding: 0.875rem 1rem;
       }
-      
+
       .chat-messages {
         padding: 1rem;
       }
-      
+
       .message-input-container {
         padding: 1rem;
       }
-      
+
       header {
         padding: 1rem;
       }
-      
+
       .logo-title {
         font-size: 1.125rem;
       }
@@ -519,181 +541,165 @@
       .message {
         max-width: 95%;
       }
-      
+
       .header-actions {
         gap: 0.25rem;
       }
-      
+
       .icon-btn {
         padding: 0.375rem;
       }
     }
 
-
     @keyframes slide-in-right {
-      from {
-        opacity: 0;
-        transform: translateX(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
+      from { opacity: 0; transform: translateX(20px); }
+      to   { opacity: 1; transform: translateX(0); }
     }
 
     @keyframes slide-in-left {
-      from {
-        opacity: 0;
-        transform: translateX(-20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
+      from { opacity: 0; transform: translateX(-20px); }
+      to   { opacity: 1; transform: translateX(0); }
     }
 
-    .slide-in-right {
-      animation: slide-in-right 0.3s ease-out;
-    }
-
-    .slide-in-left {
-      animation: slide-in-left 0.3s ease-out;
-    }
-    
-    .message.streaming {
-  position: relative;
-}
-
-.message.streaming::after {
-  content: '▊';
-  animation: blink 1s infinite;
-  color: var(--primary);
-  margin-left: 2px;
-}
-
-@keyframes blink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
-}
+    .slide-in-right { animation: slide-in-right 0.3s ease-out; }
+    .slide-in-left  { animation: slide-in-left 0.3s ease-out; }
   </style>
 </head>
 
 <body class="flex flex-col min-h-screen">
 
-<header class="flex items-center justify-between p-4 bg-gray-900 text-white">
-  <!-- Logo -->
-  <div class="flex items-center gap-3">
-    <div class="text-2xl text-orange-500">
-      <i class="fas fa-robot"></i>
+  <header class="flex items-center justify-between p-4 bg-gray-900 text-white" role="banner">
+   
+    <div class="flex items-center gap-3">
+      <div class="logo-icon" aria-hidden="true">
+        <i class="fas fa-robot"></i>
+      </div>
+      <div class="flex flex-col">
+        <div class="logo-title">Workers AI</div>
+        <div class="logo-subtitle">LLaMa-3.3 70B</div>
+      </div>
     </div>
-    <div class="flex flex-col">
-      <div class="font-bold text-lg">Workers AI</div>
-      <div class="text-sm text-gray-400">LLaMa-3.3 70B</div>
+
+
+    <div class="flex items-center gap-4 header-actions" role="navigation" aria-label="Header actions">
+      <a href="https://github.com/sudo-self/llm" target="_blank" rel="noopener" class="icon-btn text-gray-300" title="View Source Code" aria-label="View source on GitHub">
+        <i class="fab fa-github" aria-hidden="true"></i>
+      </a>
+
+      <a href="https://gemini-two.pages.dev" target="_blank" rel="noopener" class="icon-btn text-gray-300" title="Google's Gemini 2" aria-label="Open Gemini 2">
+        <i class="fas fa-cloud" aria-hidden="true"></i>
+      </a>
+
+      <a href="https://iconic.jessejesse.xyz" target="_blank" rel="noopener" class="icon-btn text-gray-300" title="Stability AI Image Generation" aria-label="Open Stability AI Image Generation">
+        <i class="fas fa-image" aria-hidden="true"></i>
+      </a>
+
+      <button id="theme-toggle" class="icon-btn text-gray-300" title="Toggle Theme" aria-label="Toggle light or dark theme">
+        <i class="fas fa-moon" aria-hidden="true"></i>
+      </button>
     </div>
-  </div>
-
-  <!-- Actions -->
-  <div class="flex items-center gap-4">
-    <a href="https://github.com/sudo-self/llm" target="_blank" class="text-gray-400 hover:text-white transition-colors" title="View Source Code">
-      <i class="fab fa-github text-xl"></i>
-    </a>
-    <a href="https://gemini-two.pages.dev" target="_blank" class="text-gray-400 hover:text-white transition-colors" title="Google's Gemini 2">
-      <i class="fas fa-cloud text-xl"></i>
-    </a>
-    <a href="https://iconic.jessejesse.xyz" target="_blank" class="text-gray-400 hover:text-white transition-colors" title="Stability AI Image Generation">
-      <i class="fas fa-image text-xl"></i>
-    </a>
-    <button id="theme-toggle" class="text-gray-400 hover:text-white transition-colors" title="Toggle Theme">
-      <i class="fas fa-moon text-xl"></i>
-    </button>
-  </div>
-</header>
-
-
+  </header>
 
   <main class="flex-1">
     <div class="chat-container">
-      <div id="chat-messages" class="chat-messages"></div>
+      <div id="chat-messages" class="chat-messages" role="log" aria-live="polite"></div>
 
-      <div id="typing-indicator">
+      <div id="typing-indicator" aria-hidden="true">
         <div class="logo-icon" style="width: 24px; height: 24px; font-size: 0.75rem;">
-          <i class="fas fa-robot"></i>
+          <i class="fas fa-robot" aria-hidden="true"></i>
         </div>
         <span class="text-sm font-medium">Thinking</span>
-        <div class="typing-dots">
+        <div class="typing-dots" aria-hidden="true">
           <div class="typing-dot"></div>
           <div class="typing-dot"></div>
           <div class="typing-dot"></div>
         </div>
       </div>
 
-      <div class="message-input-container">
+      <div class="message-input-container" role="form" aria-label="Send a message">
         <div class="message-input-wrapper">
-          <textarea 
-            id="user-input" 
-            placeholder="Ask me anything..." 
+          <textarea
+            id="user-input"
+            placeholder="Ask me anything..."
             rows="1"
+            aria-label="Your message"
           ></textarea>
-          <button id="send-button" disabled>
-            <i class="fas fa-paper-plane"></i>
+          <button id="send-button" disabled aria-label="Send message" title="Send">
+            <i class="fas fa-paper-plane" aria-hidden="true"></i>
           </button>
         </div>
       </div>
     </div>
   </main>
 
-<!-- Footer -->
-<footer class="py-4 bg-gray-900 text-center">
-  <div class="text-sm text-orange-500 flex items-center justify-center gap-1">
-    Made with
-    <i class="fas fa-heart text-orange-500"></i>
-    by
-    <a href="https://jessejesse.com" class="hover:text-cyan-500 hover:underline transition-colors">
-      JesseJesse.com
-    </a>
-  </div>
-</footer>
-
-
+  <!-- Footer -->
+  <footer class="py-4 bg-gray-900 text-center" role="contentinfo">
+    <div class="text-sm text-orange-500 flex items-center justify-center gap-1">
+      Made with
+      <i class="fas fa-heart text-orange-500" aria-hidden="true"></i>
+      by
+      <a href="https://jessejesse.com" class="footer-link" target="_blank" rel="noopener" aria-label="Visit JesseJesse.com">
+        JesseJesse.com
+      </a>
+    </div>
+  </footer>
 
   <script>
+  
+    (function () {
+      const themeToggle = document.getElementById('theme-toggle');
+      const themeIcon = themeToggle.querySelector('i');
+
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      if (savedTheme === 'light') {
+        document.body.classList.add('light-mode');
+        themeIcon.classList.replace('fa-moon', 'fa-sun');
+      }
+
+      themeToggle.addEventListener('click', () => {
+        const isLight = document.body.classList.toggle('light-mode');
+        themeIcon.classList.toggle('fa-moon', !isLight);
+        themeIcon.classList.toggle('fa-sun', isLight);
+        localStorage.setItem('theme', isLight ? 'light' : 'dark');
+
+        themeToggle.style.transform = 'scale(0.95)';
+        setTimeout(() => themeToggle.style.transform = 'scale(1)', 150);
+      });
+
    
-    const themeToggle = document.getElementById('theme-toggle');
-    const themeIcon = themeToggle.querySelector('i');
-    
-  
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    if (savedTheme === 'light') {
-      document.body.classList.add('light-mode');
-      themeIcon.classList.replace('fa-moon', 'fa-sun');
-    }
+      document.addEventListener('DOMContentLoaded', () => {
+        document.body.style.opacity = '0';
+        document.body.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => document.body.style.opacity = '1', 100);
+      });
+    })();
 
-    themeToggle.addEventListener('click', () => {
-      const isLight = document.body.classList.toggle('light-mode');
-      themeIcon.classList.toggle('fa-moon', !isLight);
-      themeIcon.classList.toggle('fa-sun', isLight);
-      localStorage.setItem('theme', isLight ? 'light' : 'dark');
-      
-    
-      themeToggle.style.transform = 'scale(0.95)';
-      setTimeout(() => {
-        themeToggle.style.transform = 'scale(1)';
-      }, 150);
-    });
+   
+    (function () {
+      const textarea = document.getElementById('user-input');
+      const sendButton = document.getElementById('send-button');
 
-    document.addEventListener('DOMContentLoaded', () => {
-      document.body.style.opacity = '0';
-      document.body.style.transition = 'opacity 0.3s ease';
-      
-      setTimeout(() => {
-        document.body.style.opacity = '1';
-      }, 100);
-    });
+      function refreshSendState() {
+        const hasText = textarea.value.trim().length > 0;
+        sendButton.disabled = !hasText;
+        if (hasText) {
+          sendButton.classList.add('enabled');
+        } else {
+          sendButton.classList.remove('enabled');
+        }
+      }
+
+      textarea.addEventListener('input', refreshSendState);
+ 
+      refreshSendState();
+    })();
   </script>
-  
+
+
   <script src="/chat.js" defer></script>
 </body>
 </html>
+
 
 
 
