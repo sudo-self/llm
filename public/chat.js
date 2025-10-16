@@ -1,55 +1,31 @@
-// chat.js
-
 const chatMessages = document.getElementById("chat-messages");
 const userInput = document.getElementById("user-input");
 const sendButton = document.getElementById("send-button");
 const typingIndicator = document.getElementById("typing-indicator");
 
 let chatHistory = [
-  { role: "assistant", content: "Hi! I'm J, How can I help?" },
+  { role: "assistant", content: "Hi! I'm J, How can I help?" }
 ];
 let isProcessing = false;
 
-// Escape HTML
+// --- Helpers ---
 function escapeHtml(text) {
-  const div = document.createElement("div");
+  const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
 }
 
-// Prism highlighting
 function highlightCodeBlocks(container = chatMessages) {
-  if (typeof Prism !== "undefined") {
+  if (typeof Prism !== 'undefined') {
     requestAnimationFrame(() => Prism.highlightAllUnder(container));
   }
 }
 
-// Scroll chat
 function scrollToBottom() {
-  chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: "smooth" });
+  chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
 }
 
-// Parse SSE streaming chunks
-function parseSSEChunk(chunk) {
-  const lines = chunk.split("\n");
-  const events = [];
-  for (const line of lines) {
-    if (line.startsWith("data: ")) {
-      const data = line.slice(6).trim();
-      if (data === "[DONE]") events.push({ type: "done" });
-      else if (data) {
-        try {
-          events.push({ type: "data", data: JSON.parse(data) });
-        } catch (err) {
-          console.warn("Failed to parse SSE data:", data, err);
-        }
-      }
-    }
-  }
-  return events;
-}
-
-// Render code & text chunks
+// --- Rendering ---
 function renderChunk(text, container) {
   const fragment = document.createDocumentFragment();
   let lastIndex = 0;
@@ -57,196 +33,148 @@ function renderChunk(text, container) {
   let match;
 
   while ((match = codeRegex.exec(text)) !== null) {
-    // Text before code block
     const before = text.slice(lastIndex, match.index);
-    if (before.trim()) {
-      const p = document.createElement("p");
-      p.innerHTML = before.replace(/`([^`]+)`/g, (_, code) => `<code class="inline-code">${escapeHtml(code)}</code>`).replace(/\n/g, "<br>");
+    if(before.trim()) {
+      const p = document.createElement('p');
+      p.innerHTML = before.replace(/`([^`]+)`/g, (_, code) => `<code class="inline-code">${escapeHtml(code)}</code>`).replace(/\n/g,'<br>');
       fragment.appendChild(p);
     }
 
-    // Code block
-    const wrapper = document.createElement("div");
-    wrapper.className = "code-block";
+    const wrapper = document.createElement('div');
+    wrapper.className = 'code-block';
 
-    const header = document.createElement("div");
-    header.className = "code-header";
+    const header = document.createElement('div');
+    header.className = 'code-header';
 
-    const langLabel = document.createElement("span");
-    langLabel.className = "code-language";
-    langLabel.textContent = match[1] || "text";
+    const langLabel = document.createElement('span');
+    langLabel.textContent = match[1] || 'text';
 
-    const copyBtn = document.createElement("button");
-    copyBtn.className = "copy-btn";
-    copyBtn.setAttribute("title", "Copy code");
-    copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
+    const copyBtn = document.createElement('button');
+    copyBtn.className='copy-btn';
+    copyBtn.innerHTML='<i class="fas fa-copy"></i>';
 
     header.appendChild(langLabel);
     header.appendChild(copyBtn);
     wrapper.appendChild(header);
 
-    const pre = document.createElement("pre");
-    const codeEl = document.createElement("code");
-    codeEl.className = `language-${match[1] || "text"}`;
+    const pre = document.createElement('pre');
+    const codeEl = document.createElement('code');
+    codeEl.className = `language-${match[1]||'text'}`;
     codeEl.textContent = match[2].trim();
     pre.appendChild(codeEl);
     wrapper.appendChild(pre);
-
     fragment.appendChild(wrapper);
+
     lastIndex = match.index + match[0].length;
   }
 
-  // Remaining text
   const remaining = text.slice(lastIndex);
-  if (remaining.trim()) {
-    const p = document.createElement("p");
-    p.innerHTML = remaining.replace(/`([^`]+)`/g, (_, code) => `<code class="inline-code">${escapeHtml(code)}</code>`).replace(/\n/g, "<br>");
+  if(remaining.trim()) {
+    const p = document.createElement('p');
+    p.innerHTML = remaining.replace(/`([^`]+)`/g, (_, code) => `<code class="inline-code">${escapeHtml(code)}</code>`).replace(/\n/g,'<br>');
     fragment.appendChild(p);
   }
 
-  container.innerHTML = "";
+  container.innerHTML = '';
   container.appendChild(fragment);
   highlightCodeBlocks(container);
 }
 
-// Render a message (user or assistant)
-function renderMessage(content, isUser = false) {
-  const msgEl = document.createElement("div");
-  msgEl.className = `message ${isUser ? "user-message" : "assistant-message"} visible`;
-  chatMessages.appendChild(msgEl);
+function renderMessage(content, isUser=false) {
+  const msgEl = document.createElement('div');
+  msgEl.className = `message ${isUser ? 'user-message' : 'assistant-message'} visible`;
+  if(!isUser) msgEl.classList.add('streaming');
 
-  if (isUser) {
+  chatMessages.appendChild(msgEl);
+  scrollToBottom();
+
+  if(isUser) {
     renderChunk(content, msgEl);
   } else {
-    // For assistant, start streaming empty initially
-    const p = document.createElement("p");
-    msgEl.appendChild(p);
+    appendStreamingText(content, msgEl);
   }
-
-  scrollToBottom();
-  return msgEl;
 }
 
-// Append streaming text for SSE
-function appendStreamingText(text, container) {
-  const lastChild = container.querySelector("p:last-of-type");
-  if (!lastChild) {
-    const p = document.createElement("p");
-    container.appendChild(p);
+// --- Streaming text ---
+async function appendStreamingText(fullText, container) {
+  const p = document.createElement('p');
+  container.appendChild(p);
+
+  let i = 0;
+  while(i < fullText.length) {
+    p.innerHTML = escapeHtml(fullText.slice(0, i+1)).replace(/\n/g,'<br>');
+    scrollToBottom();
+    i++;
+    await new Promise(r => setTimeout(r, 15)); // simulate typing
   }
-  renderChunk(text, container);
-  scrollToBottom();
+
+  container.classList.remove('streaming');
+  highlightCodeBlocks(container);
 }
 
-// Input handling
-userInput.addEventListener("input", () => {
-  userInput.style.height = "auto";
-  userInput.style.height = Math.min(userInput.scrollHeight, 120) + "px";
-  const hasText = userInput.value.trim() !== "";
+// --- Copy buttons ---
+document.addEventListener('click', e=>{
+  const btn = e.target.closest('.copy-btn');
+  if(!btn) return;
+  const codeEl = btn.closest('.code-block')?.querySelector('code');
+  if(!codeEl) return;
+  navigator.clipboard.writeText(codeEl.textContent);
+  btn.classList.add('copied');
+  setTimeout(()=>btn.classList.remove('copied'),2000);
+});
+
+// --- Input handling ---
+userInput.addEventListener('input', () => {
+  userInput.style.height = 'auto';
+  userInput.style.height = Math.min(userInput.scrollHeight,120)+'px';
+  const hasText = userInput.value.trim() !== '';
   sendButton.disabled = !hasText || isProcessing;
-  sendButton.classList.toggle("enabled", hasText && !isProcessing);
+  sendButton.classList.toggle('enabled', hasText && !isProcessing);
 });
 
-userInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    if (!sendButton.disabled) sendMessage();
-  }
+userInput.addEventListener('keydown', e=>{
+  if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); if(!sendButton.disabled) sendMessage(); }
 });
+sendButton.addEventListener('click', ()=>{ if(!sendButton.disabled) sendMessage(); });
 
-sendButton.addEventListener("click", () => { if (!sendButton.disabled) sendMessage(); });
-
-// Copy code buttons
-document.addEventListener("click", (e) => {
-  const copyBtn = e.target.closest(".copy-btn");
-  if (!copyBtn) return;
-  const codeEl = copyBtn.closest(".code-block")?.querySelector("code");
-  if (!codeEl) return;
-
-  navigator.clipboard.writeText(codeEl.textContent).then(() => {
-    const icon = copyBtn.querySelector("i");
-    const originalClass = icon.className;
-    copyBtn.classList.add("copied");
-    icon.className = "fas fa-check";
-    copyBtn.setAttribute("title", "Copied!");
-    setTimeout(() => {
-      copyBtn.classList.remove("copied");
-      icon.className = originalClass;
-      copyBtn.setAttribute("title", "Copy code");
-    }, 2000);
-  }).catch(err => console.error("Failed to copy code:", err));
-});
-
-// Send message
-async function sendMessage() {
+// --- Send message ---
+async function sendMessage(){
   const message = userInput.value.trim();
-  if (!message || isProcessing) return;
+  if(!message || isProcessing) return;
 
   isProcessing = true;
   sendButton.disabled = true;
   userInput.disabled = true;
-  sendButton.classList.remove("enabled");
+  userInput.value = '';
+  userInput.style.height='auto';
 
+  typingIndicator.classList.add('visible');
   renderMessage(message, true);
-  chatHistory.push({ role: "user", content: message });
-
-  userInput.value = "";
-  userInput.style.height = "auto";
-
-  typingIndicator.classList.add("visible");
+  chatHistory.push({ role:'user', content:message });
 
   try {
-    const responseEl = renderMessage("", false);
+    // --- Mock API streaming response ---
+    const responseText = "Sure! Here's some `inline code` and a code block:\n```javascript\nconsole.log('Hello World!');\n```";
+    await new Promise(r => setTimeout(r, 200)); // small delay
+    renderMessage(responseText, false);
+    chatHistory.push({ role:'assistant', content:responseText });
 
-    const res = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: chatHistory }),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-    let fullText = "";
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const events = parseSSEChunk(buffer);
-      const lastNewline = buffer.lastIndexOf("\n");
-      if (lastNewline !== -1) buffer = buffer.slice(lastNewline + 1);
-
-      for (const event of events) {
-        if (event.type === "data" && event.data?.response) {
-          fullText += event.data.response;
-          renderChunk(fullText, responseEl);
-          scrollToBottom();
-        }
-      }
-    }
-
-    responseEl.classList.remove("streaming");
-    chatHistory.push({ role: "assistant", content: fullText });
-    highlightCodeBlocks(responseEl);
-
-  } catch (err) {
+  } catch(err) {
+    renderMessage("Oops! Something went wrong.", false);
     console.error(err);
-    renderMessage("Error: Unable to fetch response.", false);
   } finally {
-    typingIndicator.classList.remove("visible");
-    isProcessing = false;
-    userInput.disabled = false;
-    sendButton.disabled = userInput.value.trim() === "";
-    if (userInput.value.trim()) sendButton.classList.add("enabled");
+    typingIndicator.classList.remove('visible');
+    isProcessing=false;
+    userInput.disabled=false;
+    sendButton.disabled = userInput.value.trim()==='';
+    if(userInput.value.trim()) sendButton.classList.add('enabled');
     userInput.focus();
   }
 }
 
-// Initial assistant message
+// --- Initial assistant message ---
 renderMessage(chatHistory[0].content, false);
+
 
 
 
