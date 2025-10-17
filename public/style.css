@@ -1,3 +1,5 @@
+/* style.css */
+
 :root {
   --primary: #f97316;
   --primary-dark: #ea580c;
@@ -12,7 +14,7 @@
   --success: #10b981;
 }
 
-/* Reset + Base */
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -26,7 +28,7 @@ html, body {
 body {
   background: linear-gradient(135deg, var(--bg-darker) 0%, var(--bg-dark) 100%);
   color: var(--text-dark);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -38,7 +40,7 @@ body.light-mode {
   color: var(--text-light);
 }
 
-/* Header */
+
 header {
   background: rgba(15, 23, 42, 0.8);
   backdrop-filter: blur(20px);
@@ -57,12 +59,6 @@ body.light-mode header {
   border-bottom: 1px solid var(--border-light);
 }
 
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
 .logo-icon {
   width: 32px;
   height: 32px;
@@ -76,12 +72,7 @@ body.light-mode header {
   font-weight: 600;
 }
 
-.logo-text {
-  display: flex;
-  flex-direction: column;
-}
 
-/* Theme-compliant logo text */
 .logo-title {
   font-weight: 700;
   font-size: 1.25rem;
@@ -91,18 +82,14 @@ body.light-mode header {
 
 .logo-subtitle {
   font-size: 0.75rem;
-  margin-top: -2px;
   opacity: 0.8;
   color: var(--text-dark);
   transition: color 0.3s ease;
 }
 
-body.light-mode .logo-title {
-  color: var(--text-light);
-}
-
+body.light-mode .logo-title,
 body.light-mode .logo-subtitle {
-  color: #4b5563;
+  color: var(--text-light);
 }
 
 .header-actions {
@@ -111,7 +98,7 @@ body.light-mode .logo-subtitle {
   gap: 0.5rem;
 }
 
-/* Buttons */
+
 .icon-btn {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
@@ -125,6 +112,7 @@ body.light-mode .logo-subtitle {
   cursor: pointer;
   min-width: 40px;
   min-height: 40px;
+  text-decoration: none;
 }
 
 .icon-btn i {
@@ -148,7 +136,7 @@ body.light-mode .icon-btn {
   outline: none;
 }
 
-/* Chat Layout */
+
 .chat-container {
   max-width: 800px;
   margin: 0 auto;
@@ -167,7 +155,7 @@ body.light-mode .icon-btn {
   gap: 1rem;
 }
 
-/* Messages */
+
 .message {
   max-width: 85%;
   padding: 1rem 1.25rem;
@@ -230,7 +218,7 @@ body.light-mode .assistant-message {
   51%, 100% { opacity: 0; }
 }
 
-/* Input area */
+
 .message-input-container {
   background: rgba(15, 23, 42, 0.8);
   backdrop-filter: blur(20px);
@@ -267,6 +255,7 @@ body.light-mode .message-input-container {
   transition: all 0.2s ease;
   backdrop-filter: blur(10px);
   overflow-y: auto;
+  font-family: inherit;
 }
 
 body.light-mode #user-input {
@@ -314,8 +303,8 @@ body.light-mode #user-input:focus {
   transform: scale(0.95);
 }
 
-/* Typing indicator */
-#typing-indicator {
+
+.typing-indicator {
   background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(10px);
   border-top: 1px solid var(--border-dark);
@@ -327,12 +316,12 @@ body.light-mode #user-input:focus {
   transition: opacity 0.3s ease;
 }
 
-#typing-indicator.visible {
+.typing-indicator.visible {
   opacity: 1;
   display: flex;
 }
 
-body.light-mode #typing-indicator {
+body.light-mode .typing-indicator {
   background: rgba(0, 0, 0, 0.03);
   border-top: 1px solid var(--border-light);
 }
@@ -358,7 +347,7 @@ body.light-mode #typing-indicator {
   40% { transform: scale(1); opacity: 1; }
 }
 
-/* Code blocks */
+
 .code-block {
   position: relative;
   margin: 1rem 0;
@@ -463,7 +452,7 @@ body.light-mode .inline-code {
   border: 1px solid #e5e7eb;
 }
 
-/* Footer */
+
 footer {
   background: rgba(15, 23, 42, 0.8);
   backdrop-filter: blur(20px);
@@ -488,7 +477,7 @@ body.light-mode footer {
   color: var(--primary-dark);
 }
 
-/* Scrollbar */
+
 .chat-messages::-webkit-scrollbar {
   width: 6px;
 }
@@ -504,6 +493,14 @@ body.light-mode footer {
 
 .chat-messages::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.18);
+}
+
+body.light-mode .chat-messages::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+body.light-mode .chat-messages::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
 }
 
 /* Responsive */
@@ -544,7 +541,7 @@ body.light-mode footer {
   }
 }
 
-/* Animations */
+
 @keyframes slide-in-right {
   from { opacity: 0; transform: translateX(20px); }
   to   { opacity: 1; transform: translateX(0); }
