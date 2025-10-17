@@ -586,6 +586,30 @@
 
     .slide-in-right { animation: slide-in-right 0.3s ease-out; }
     .slide-in-left  { animation: slide-in-left 0.3s ease-out; }
+    
+    .logo-title {
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--text-dark); 
+  transition: color 0.3s ease;
+}
+
+.logo-subtitle {
+  font-size: 0.75rem;
+  margin-top: -2px;
+  opacity: 0.8;
+  color: var(--text-dark);
+  transition: color 0.3s ease;
+}
+
+body.light-mode .logo-title {
+  color: var(--text-light);
+}
+
+body.light-mode .logo-subtitle {
+  color: #4b5563;
+}
+
   </style>
 </head>
 
@@ -603,6 +627,7 @@
   <div class="flex flex-col">
 <div class="logo-title">Workers AI</div>
 <div class="logo-subtitle text-sm">LLaMa-3.3 70B</div>
+
 
   </div>
 </div>
