@@ -1,762 +1,260 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <title>AI Assistant | ai.jessejesse.com</title>
-  <meta name="title" content="AI Assistant | ai.jessejesse.com" />
-  <meta name="description" content="AI Chat Assistant powered by Cloudflare Workers AI" />
-  <meta name="author" content="JesseJesse.com" />
-  <meta name="keywords" content="AI Assistant, ai.jessejesse.com, chat assistant, Cloudflare Workers AI, smart AI chat, powered AI assistant" />
-
-
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://ai.jessejesse.com/" />
-  <meta property="og:title" content="AI Assistant | ai.jessejesse.com" />
-  <meta property="og:description" content="AI Chat Assistant powered by Cloudflare Workers AI" />
-  <meta property="og:image" content="https://ai.jessejesse.com/preview.png" />
-
-
-  <meta property="twitter:card" content="summary_large_image" />
-  <meta property="twitter:url" content="https://ai.jessejesse.com/" />
-  <meta property="twitter:title" content="AI Assistant | ai.jessejesse.com" />
-  <meta property="twitter:description" content="AI Chat Assistant powered by Cloudflare Workers AI" />
-  <meta property="twitter:image" content="https://ai.jessejesse.com/preview.png" />
-
-
-  <link rel="canonical" href="https://ai.jessejesse.com/" />
-
-
-  <link rel="icon" href="/favicon.ico" sizes="any" />
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-  <link rel="manifest" href="/manifest.json" />
-</head>
-
-
-  <link href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism-tomorrow.css" rel="stylesheet" />
-
-  <script src="https://cdn.tailwindcss.com"></script>
-
-
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-
-  <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-javascript.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-typescript.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-json.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-bash.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-css.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-markup.min.js"></script>
-
-  <link rel="stylesheet" href="/style.css" />
-
-
-  <style>
-    :root {
-      --primary: #f97316;
-      --primary-dark: #ea580c;
-      --bg-dark: #0f172a;
-      --bg-darker: #020617;
-      --bg-light: #ffffff;
-      --bg-lighter: #f8fafc;
-      --text-dark: #f1f5f9;
-      --text-light: #1e293b;
-      --border-dark: #334155;
-      --border-light: #e2e8f0;
-      --success: #10b981;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html, body {
-      height: 100%;
-    }
-
-    body {
-      background: linear-gradient(135deg, var(--bg-darker) 0%, var(--bg-dark) 100%);
-      color: var(--text-dark);
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-
-    body.light-mode {
-      background: linear-gradient(135deg, var(--bg-lighter) 0%, var(--bg-light) 100%);
-      color: var(--text-light);
-    }
-
-    header {
-      background: rgba(15, 23, 42, 0.8);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border-dark);
-      padding: 1rem 1.5rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    body.light-mode header {
-      background: rgba(255, 255, 255, 0.8);
-      border-bottom: 1px solid var(--border-light);
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .logo-icon {
-      width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 0.875rem;
-      font-weight: 600;
-    }
-
-    .logo-text {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .logo-title {
-      font-weight: 700;
-      color: var(--primary);
-      font-size: 1.25rem;
-    }
-
-    .logo-subtitle {
-      font-size: 0.75rem;
-      opacity: 0.7;
-      margin-top: -2px;
-    }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-  
-    .icon-btn {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      color: inherit;
-      padding: 0.5rem;
-      border-radius: 8px;
-      transition: all 0.18s ease;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      min-width: 40px;
-      min-height: 40px;
-    }
-
-    .icon-btn i {
-      font-size: 1.125rem; 
-      line-height: 1;
-      display: block;
-      color: currentColor;
-    }
-
-    body.light-mode .icon-btn {
-      background: rgba(0, 0, 0, 0.03);
-      border: 1px solid var(--border-light);
-      color: var(--text-light);
-    }
-
-    .icon-btn:hover, .icon-btn:focus {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: white;
-      transform: translateY(-1px);
-      outline: none;
-    }
-
-    .chat-container {
-      max-width: 800px;
-      margin: 0 auto;
-      height: calc(100vh - 120px);
-      display: flex;
-      flex-direction: column;
-      background: transparent;
-    }
-
-    .chat-messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .message {
-      max-width: 85%;
-      padding: 1rem 1.25rem;
-      border-radius: 1.25rem;
-      margin: 0.25rem 0;
-      word-wrap: break-word;
-      line-height: 1.6;
-      opacity: 0;
-      transform: translateY(10px);
-      transition: all 0.3s ease;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .message.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .user-message {
-      align-self: flex-end;
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: white;
-      border-bottom-right-radius: 0.5rem;
-    }
-
-    .assistant-message {
-      align-self: flex-start;
-      background: rgba(255, 255, 255, 0.06);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.04);
-      color: var(--text-dark);
-      border-bottom-left-radius: 0.5rem;
-    }
-
-    body.light-mode .assistant-message {
-      background: rgba(255, 255, 255, 0.9);
-      border: 1px solid var(--border-light);
-      color: var(--text-light);
-    }
-
-    .message.streaming {
-      background: linear-gradient(90deg,
-        rgba(255, 255, 255, 0.12) 0%,
-        rgba(255, 255, 255, 0.06) 50%,
-        rgba(255, 255, 255, 0.12) 100%);
-      position: relative;
-    }
-
-    .message.streaming::after {
-      content: '▊';
-      animation: blink 1s infinite;
-      color: var(--primary);
-      margin-left: 2px;
-    }
-
-    @keyframes blink {
-      0%, 50% { opacity: 1; }
-      51%, 100% { opacity: 0; }
-    }
-
-    .message-input-container {
-      background: rgba(15, 23, 42, 0.8);
-      backdrop-filter: blur(20px);
-      border-top: 1px solid var(--border-dark);
-      padding: 1.5rem;
-      position: sticky;
-      bottom: 0;
-    }
-
-    body.light-mode .message-input-container {
-      background: rgba(255, 255, 255, 0.8);
-      border-top: 1px solid var(--border-light);
-    }
-
-    .message-input-wrapper {
-      display: flex;
-      gap: 0.75rem;
-      align-items: flex-end;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    #user-input {
-      background: rgba(255, 255, 255, 0.06);
-      border: 2px solid transparent;
-      color: var(--text-dark);
-      border-radius: 1.5rem;
-      padding: 1rem 1.25rem;
-      font-size: 1rem;
-      line-height: 1.5;
-      resize: none;
-      max-height: 120px;
-      flex: 1;
-      transition: all 0.2s ease;
-      backdrop-filter: blur(10px);
-      overflow-y: auto; 
-    }
-
-    body.light-mode #user-input {
-      background: rgba(0, 0, 0, 0.03);
-      color: var(--text-light);
-    }
-
-    #user-input:focus {
-      outline: none;
-      border-color: var(--primary);
-      background: rgba(255, 255, 255, 0.12);
-      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.08);
-    }
-
-    body.light-mode #user-input:focus {
-      background: rgba(255, 255, 255, 0.95);
-    }
-
-    #send-button {
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 48px;
-      height: 48px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
-      cursor: pointer;
-      opacity: 0.6;
-      border: 0;
-    }
-
-    #send-button.enabled {
-      opacity: 1;
-      transform: scale(1.05);
-    }
-
-    #send-button:hover:not(:disabled) {
-      background: var(--primary-dark);
-      transform: scale(1.1);
-    }
-
-    #send-button:active {
-      transform: scale(0.95);
-    }
-
-    #typing-indicator {
-      background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(10px);
-      border-top: 1px solid var(--border-dark);
-      padding: 1rem 1.5rem;
-      display: none;
-      align-items: center;
-      gap: 0.75rem;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
-    #typing-indicator.visible {
-      opacity: 1;
-      display: flex;
-    }
-
-    body.light-mode #typing-indicator {
-      background: rgba(0, 0, 0, 0.03);
-      border-top: 1px solid var(--border-light);
-    }
-
-    .typing-dots {
-      display: flex;
-      gap: 0.25rem;
-    }
-
-    .typing-dot {
-      width: 6px;
-      height: 6px;
-      background: var(--primary);
-      border-radius: 50%;
-      animation: typing-bounce 1.4s infinite ease-in-out;
-    }
-
-    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
-    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
-
-    @keyframes typing-bounce {
-      0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
-      40% { transform: scale(1); opacity: 1; }
-    }
-
-    .code-block {
-      position: relative;
-      margin: 1rem 0;
-      border-radius: 0.75rem;
-      overflow: hidden;
-      background: #1a1a1a;
-      border: 1px solid #333;
-    }
-
-    .code-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.75rem 1rem;
-      background: #2d2d2d;
-      border-bottom: 1px solid #404040;
-    }
-
-    .code-language {
-      color: #ccc;
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .copy-btn {
-      background: #404040;
-      color: #ccc;
-      border: none;
-      border-radius: 0.375rem;
-      padding: 0.375rem 0.5rem;
-      font-size: 0.75rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-    }
-
-    .copy-btn:hover {
-      background: #555;
-      color: white;
-    }
-
-    .copy-btn.copied {
-      background: var(--success);
-      color: white;
-    }
-
-    .code-block pre {
-      margin: 0;
-      padding: 1rem;
-      overflow-x: auto;
-      font-size: 0.875rem;
-      line-height: 1.5;
-    }
-
-    .code-block pre code {
-      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-      background: transparent !important;
-    }
-
-    .inline-code {
-      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-      font-size: 0.875rem;
-      background: rgba(255, 255, 255, 0.08);
-      color: #fbbf24;
-      padding: 0.125rem 0.375rem;
-      border-radius: 0.25rem;
-      border: 1px solid rgba(255, 255, 255, 0.06);
-    }
-
-    body.light-mode .code-block {
-      background: #f8f8f8;
-      border: 1px solid #e5e7eb;
-    }
-
-    body.light-mode .code-header {
-      background: #e5e7eb;
-      border-bottom: 1px solid #d1d5db;
-    }
-
-    body.light-mode .code-language {
-      color: #6b7280;
-    }
-
-    body.light-mode .copy-btn {
-      background: #d1d5db;
-      color: #4b5563;
-    }
-
-    body.light-mode .copy-btn:hover {
-      background: #9ca3af;
-      color: white;
-    }
-
-    body.light-mode .inline-code {
-      background: #f3f4f6;
-      color: #dc2626;
-      border: 1px solid #e5e7eb;
-    }
-
-    footer {
-      background: rgba(15, 23, 42, 0.8);
-      backdrop-filter: blur(20px);
-      border-top: 1px solid var(--border-dark);
-      padding: 1rem;
-      text-align: center;
-    }
-
-    body.light-mode footer {
-      background: rgba(255, 255, 255, 0.8);
-      border-top: 1px solid var(--border-light);
-    }
-
-    .footer-link {
-      color: var(--primary);
-      text-decoration: none;
-      font-weight: 500;
-      transition: color 0.2s ease;
-    }
-
-    .footer-link:hover {
-      color: var(--primary-dark);
-    }
-
-    .chat-messages::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .chat-messages::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    .chat-messages::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.12);
-      border-radius: 3px;
-    }
-
-    .chat-messages::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.18);
-    }
-
-    @media (max-width: 768px) {
-      .message {
-        max-width: 90%;
-        padding: 0.875rem 1rem;
-      }
-
-      .chat-messages {
-        padding: 1rem;
-      }
-
-      .message-input-container {
-        padding: 1rem;
-      }
-
-      header {
-        padding: 1rem;
-      }
-
-      .logo-title {
-        font-size: 1.125rem;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .message {
-        max-width: 95%;
-      }
-
-      .header-actions {
-        gap: 0.25rem;
-      }
-
-      .icon-btn {
-        padding: 0.375rem;
-      }
-    }
-
-    @keyframes slide-in-right {
-      from { opacity: 0; transform: translateX(20px); }
-      to   { opacity: 1; transform: translateX(0); }
-    }
-
-    @keyframes slide-in-left {
-      from { opacity: 0; transform: translateX(-20px); }
-      to   { opacity: 1; transform: translateX(0); }
-    }
-
-    .slide-in-right { animation: slide-in-right 0.3s ease-out; }
-    .slide-in-left  { animation: slide-in-left 0.3s ease-out; }
-    
-    .logo-title {
-  font-weight: 700;
-  font-size: 1.25rem;
-  color: var(--text-dark); 
-  transition: color 0.3s ease;
-}
-
-.logo-subtitle {
-  font-size: 0.75rem;
-  margin-top: -2px;
-  opacity: 0.8;
-  color: var(--text-dark);
-  transition: color 0.3s ease;
-}
-
-body.light-mode .logo-title {
-  color: var(--text-light);
-}
-
-body.light-mode .logo-subtitle {
-  color: #4b5563;
-}
-
-  </style>
-</head>
-
-<body class="flex flex-col min-h-screen">
-
-  <header class="flex items-center justify-between p-4 bg-gray-900 text-white" role="banner">
-   
- <div class="flex items-center gap-3">
- 
-  <div class="logo-icon" aria-hidden="true">
-    <i class="fas fa-robot"></i>
-  </div>
-
-
-  <div class="flex flex-col">
-<div class="logo-title">Workers AI</div>
-<div class="logo-subtitle text-sm">LLaMa-3.3 70B</div>
-
-
-  </div>
-</div>
-
-
-      </div>
-    </div>
-
-
-    <div class="flex items-center gap-4 header-actions" role="navigation" aria-label="Header actions">
-      <a href="https://github.com/sudo-self/llm" target="_blank" rel="noopener" class="icon-btn text-gray-300" title="View Source Code" aria-label="View source on GitHub">
-        <i class="fab fa-github" aria-hidden="true"></i>
-      </a>
-
-      <a href="https://gemini-two.pages.dev" target="_blank" rel="noopener" class="icon-btn text-gray-300" title="Google's Gemini 2" aria-label="Open Gemini 2">
-        <i class="fas fa-cloud" aria-hidden="true"></i>
-      </a>
-
-      <a href="https://iconic.jessejesse.xyz" target="_blank" rel="noopener" class="icon-btn text-gray-300" title="Stability AI Image Generation" aria-label="Open Stability AI Image Generation">
-        <i class="fas fa-image" aria-hidden="true"></i>
-      </a>
-
-      <button id="theme-toggle" class="icon-btn text-gray-300" title="Toggle Theme" aria-label="Toggle light or dark theme">
-        <i class="fas fa-moon" aria-hidden="true"></i>
-      </button>
-    </div>
-  </header>
-
-  <main class="flex-1">
-    <div class="chat-container">
-      <div id="chat-messages" class="chat-messages" role="log" aria-live="polite"></div>
-
-      <div id="typing-indicator" aria-hidden="true">
-        <div class="logo-icon" style="width: 24px; height: 24px; font-size: 0.75rem;">
-          <i class="fas fa-robot" aria-hidden="true"></i>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>AI Assistant | ai.jessejesse.com</title>
+    <meta name="title" content="AI Assistant | ai.jessejesse.com" />
+    <meta
+      name="description"
+      content="AI Chat Assistant powered by Cloudflare Workers AI"
+    />
+    <meta name="author" content="JesseJesse.com" />
+    <meta
+      name="keywords"
+      content="AI Assistant, ai.jessejesse.com, chat assistant, Cloudflare Workers AI, smart AI chat, powered AI assistant"
+    />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://ai.jessejesse.com/" />
+    <meta property="og:title" content="AI Assistant | ai.jessejesse.com" />
+    <meta
+      property="og:description"
+      content="AI Chat Assistant powered by Cloudflare Workers AI"
+    />
+    <meta property="og:image" content="https://ai.jessejesse.com/preview.png" />
+
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://ai.jessejesse.com/" />
+    <meta property="twitter:title" content="AI Assistant | ai.jessejesse.com" />
+    <meta
+      property="twitter:description"
+      content="AI Chat Assistant powered by Cloudflare Workers AI"
+    />
+    <meta
+      property="twitter:image"
+      content="https://ai.jessejesse.com/preview.png"
+    />
+
+    <link rel="canonical" href="https://ai.jessejesse.com/" />
+
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism-tomorrow.css"
+      rel="stylesheet"
+    />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-javascript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-typescript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-json.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-bash.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-css.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs/components/prism-markup.min.js"></script>
+
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+
+  <body class="flex flex-col min-h-screen">
+    <header
+      class="flex items-center justify-between p-4 bg-gray-900 text-white"
+      role="banner"
+    >
+      <div class="flex items-center gap-3">
+        <div class="logo-icon" aria-hidden="true">
+          <i class="fas fa-robot"></i>
         </div>
-        <span class="text-sm font-medium">Thinking</span>
-        <div class="typing-dots" aria-hidden="true">
-          <div class="typing-dot"></div>
-          <div class="typing-dot"></div>
-          <div class="typing-dot"></div>
+
+        <div class="flex flex-col">
+          <div class="logo-title">Workers AI</div>
+          <div class="logo-subtitle text-sm">LLaMa-3.3 70B</div>
         </div>
       </div>
 
-      <div class="message-input-container" role="form" aria-label="Send a message">
-        <div class="message-input-wrapper">
-          <textarea
-            id="user-input"
-            placeholder="Ask me anything..."
-            rows="1"
-            aria-label="Your message"
-          ></textarea>
-          <button id="send-button" disabled aria-label="Send message" title="Send">
-            <i class="fas fa-paper-plane" aria-hidden="true"></i>
-          </button>
+      <div
+        class="flex items-center gap-4 header-actions"
+        role="navigation"
+        aria-label="Header actions"
+      >
+        <a
+          href="https://github.com/sudo-self/llm"
+          target="_blank"
+          rel="noopener"
+          class="icon-btn text-gray-300"
+          title="View Source Code"
+          aria-label="View source on GitHub"
+        >
+          <i class="fab fa-github" aria-hidden="true"></i>
+        </a>
+
+        <a
+          href="https://gemini-two.pages.dev"
+          target="_blank"
+          rel="noopener"
+          class="icon-btn text-gray-300"
+          title="Google's Gemini 2"
+          aria-label="Open Gemini 2"
+        >
+          <i class="fas fa-cloud" aria-hidden="true"></i>
+        </a>
+
+        <a
+          href="https://iconic.jessejesse.xyz"
+          target="_blank"
+          rel="noopener"
+          class="icon-btn text-gray-300"
+          title="Stability AI Image Generation"
+          aria-label="Open Stability AI Image Generation"
+        >
+          <i class="fas fa-image" aria-hidden="true"></i>
+        </a>
+
+        <button
+          id="theme-toggle"
+          class="icon-btn text-gray-300"
+          title="Toggle Theme"
+          aria-label="Toggle light or dark theme"
+        >
+          <i class="fas fa-moon" aria-hidden="true"></i>
+        </button>
+      </div>
+    </header>
+
+    <main class="flex-1">
+      <div class="chat-container">
+        <div
+          id="chat-messages"
+          class="chat-messages"
+          role="log"
+          aria-live="polite"
+        ></div>
+
+        <div id="typing-indicator" aria-hidden="true">
+          <div
+            class="logo-icon"
+            style="width: 24px; height: 24px; font-size: 0.75rem"
+          >
+            <i class="fas fa-robot" aria-hidden="true"></i>
+          </div>
+          <span class="text-sm font-medium">Thinking</span>
+          <div class="typing-dots" aria-hidden="true">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+        </div>
+
+        <div
+          class="message-input-container"
+          role="form"
+          aria-label="Send a message"
+        >
+          <div class="message-input-wrapper">
+            <textarea
+              id="user-input"
+              placeholder="Ask me anything..."
+              rows="1"
+              aria-label="Your message"
+            ></textarea>
+            <button
+              id="send-button"
+              disabled
+              aria-label="Send message"
+              title="Send"
+            >
+              <i class="fas fa-paper-plane" aria-hidden="true"></i>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  </main>
+    </main>
 
-  <!-- Footer -->
-  <footer class="py-4 bg-gray-900 text-center" role="contentinfo">
-    <div class="text-sm text-orange-500 flex items-center justify-center gap-1">
-      Made with
-      <i class="fas fa-heart text-orange-500 hover:text-cyan-500" aria-hidden="true"></i>
-      by
-      <a href="https://jessejesse.com" class="footer-link" target="_blank" rel="noopener" aria-label="Visit JesseJesse.com">
-        JesseJesse.com
-      </a>
-    </div>
-  </footer>
+    <!-- Footer -->
+    <footer class="py-4 bg-gray-900 text-center" role="contentinfo">
+      <div
+        class="text-sm text-orange-500 flex items-center justify-center gap-1"
+      >
+        Made with
+        <i
+          class="fas fa-heart text-orange-500 hover:text-cyan-500"
+          aria-hidden="true"
+        ></i>
+        by
+        <a
+          href="https://jessejesse.com"
+          class="footer-link"
+          target="_blank"
+          rel="noopener"
+          aria-label="Visit JesseJesse.com"
+        >
+          JesseJesse.com
+        </a>
+      </div>
+    </footer>
 
-  <script>
-  
-    (function () {
-      const themeToggle = document.getElementById('theme-toggle');
-      const themeIcon = themeToggle.querySelector('i');
+    <script>
+      (function () {
+        const themeToggle = document.getElementById("theme-toggle");
+        const themeIcon = themeToggle.querySelector("i");
 
-      const savedTheme = localStorage.getItem('theme') || 'dark';
-      if (savedTheme === 'light') {
-        document.body.classList.add('light-mode');
-        themeIcon.classList.replace('fa-moon', 'fa-sun');
-      }
-
-      themeToggle.addEventListener('click', () => {
-        const isLight = document.body.classList.toggle('light-mode');
-        themeIcon.classList.toggle('fa-moon', !isLight);
-        themeIcon.classList.toggle('fa-sun', isLight);
-        localStorage.setItem('theme', isLight ? 'light' : 'dark');
-
-        themeToggle.style.transform = 'scale(0.95)';
-        setTimeout(() => themeToggle.style.transform = 'scale(1)', 150);
-      });
-
-   
-      document.addEventListener('DOMContentLoaded', () => {
-        document.body.style.opacity = '0';
-        document.body.style.transition = 'opacity 0.3s ease';
-        setTimeout(() => document.body.style.opacity = '1', 100);
-      });
-    })();
-
-   
-    (function () {
-      const textarea = document.getElementById('user-input');
-      const sendButton = document.getElementById('send-button');
-
-      function refreshSendState() {
-        const hasText = textarea.value.trim().length > 0;
-        sendButton.disabled = !hasText;
-        if (hasText) {
-          sendButton.classList.add('enabled');
-        } else {
-          sendButton.classList.remove('enabled');
+        const savedTheme = localStorage.getItem("theme") || "dark";
+        if (savedTheme === "light") {
+          document.body.classList.add("light-mode");
+          themeIcon.classList.replace("fa-moon", "fa-sun");
         }
-      }
 
-      textarea.addEventListener('input', refreshSendState);
- 
-      refreshSendState();
-    })();
-  </script>
+        themeToggle.addEventListener("click", () => {
+          const isLight = document.body.classList.toggle("light-mode");
+          themeIcon.classList.toggle("fa-moon", !isLight);
+          themeIcon.classList.toggle("fa-sun", isLight);
+          localStorage.setItem("theme", isLight ? "light" : "dark");
 
+          themeToggle.style.transform = "scale(0.95)";
+          setTimeout(() => (themeToggle.style.transform = "scale(1)"), 150);
+        });
 
-  <script src="/chat.js" defer></script>
-</body>
+        document.addEventListener("DOMContentLoaded", () => {
+          document.body.style.opacity = "0";
+          document.body.style.transition = "opacity 0.3s ease";
+          setTimeout(() => (document.body.style.opacity = "1"), 100);
+        });
+      })();
+
+      (function () {
+        const textarea = document.getElementById("user-input");
+        const sendButton = document.getElementById("send-button");
+
+        function refreshSendState() {
+          const hasText = textarea.value.trim().length > 0;
+          sendButton.disabled = !hasText;
+          if (hasText) {
+            sendButton.classList.add("enabled");
+          } else {
+            sendButton.classList.remove("enabled");
+          }
+        }
+
+        textarea.addEventListener("input", refreshSendState);
+
+        refreshSendState();
+      })();
+    </script>
+
+    <script src="/chat.js" defer></script>
+  </body>
 </html>
 
 
