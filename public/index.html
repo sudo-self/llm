@@ -71,69 +71,71 @@
   </head>
 
   <body class="flex flex-col min-h-screen">
-    <header
-      class="flex items-center justify-between p-4 bg-gray-900 text-white"
-      role="banner"
+<header
+  class="flex items-center justify-between p-4 bg-gray-900 text-white"
+  role="banner"
+>
+  <div class="flex items-center gap-3">
+
+    <div class="logo-icon w-10 h-10 overflow-hidden rounded-full" aria-hidden="true">
+      <img src="/jlogo.png" alt="J Logo" class="w-full h-full object-cover" />
+    </div>
+
+    <div class="flex flex-col">
+      <div class="logo-title">AI Jesse</div>
+      <div class="logo-subtitle text-sm">LLaMa-3.3 70B</div>
+    </div>
+  </div>
+
+  <div
+    class="flex items-center gap-4 header-actions"
+    role="navigation"
+    aria-label="Header actions"
+  >
+    <a
+      href="https://github.com/sudo-self/llm"
+      target="_blank"
+      rel="noopener"
+      class="icon-btn text-gray-300"
+      title="View Source Code"
+      aria-label="View source on GitHub"
     >
-      <div class="flex items-center gap-3">
-        <div class="logo-icon" aria-hidden="true">
-          <i class="fas fa-robot"></i>
-        </div>
+      <i class="fab fa-github" aria-hidden="true"></i>
+    </a>
 
-        <div class="flex flex-col">
-          <div class="logo-title">AI Jesse</div>
-          <div class="logo-subtitle text-sm">LLaMa-3.3 70B</div>
-        </div>
-      </div>
+    <a
+      href="https://gemini-two.pages.dev"
+      target="_blank"
+      rel="noopener"
+      class="icon-btn text-gray-300"
+      title="Google's Gemini 2"
+      aria-label="Open Gemini 2"
+    >
+      <i class="fas fa-cloud" aria-hidden="true"></i>
+    </a>
 
-      <div
-        class="flex items-center gap-4 header-actions"
-        role="navigation"
-        aria-label="Header actions"
-      >
-        <a
-          href="https://github.com/sudo-self/llm"
-          target="_blank"
-          rel="noopener"
-          class="icon-btn text-gray-300"
-          title="View Source Code"
-          aria-label="View source on GitHub"
-        >
-          <i class="fab fa-github" aria-hidden="true"></i>
-        </a>
+    <a
+      href="https://iconic.jessejesse.xyz"
+      target="_blank"
+      rel="noopener"
+      class="icon-btn text-gray-300"
+      title="Stability AI Image Generation"
+      aria-label="Open Stability AI Image Generation"
+    >
+      <i class="fas fa-image" aria-hidden="true"></i>
+    </a>
 
-        <a
-          href="https://gemini-two.pages.dev"
-          target="_blank"
-          rel="noopener"
-          class="icon-btn text-gray-300"
-          title="Google's Gemini 2"
-          aria-label="Open Gemini 2"
-        >
-          <i class="fas fa-cloud" aria-hidden="true"></i>
-        </a>
+    <button
+      id="theme-toggle"
+      class="icon-btn text-gray-300"
+      title="Toggle Theme"
+      aria-label="Toggle light or dark theme"
+    >
+      <i class="fas fa-moon" aria-hidden="true"></i>
+    </button>
+  </div>
+</header>
 
-        <a
-          href="https://iconic.jessejesse.xyz"
-          target="_blank"
-          rel="noopener"
-          class="icon-btn text-gray-300"
-          title="Stability AI Image Generation"
-          aria-label="Open Stability AI Image Generation"
-        >
-          <i class="fas fa-image" aria-hidden="true"></i>
-        </a>
-
-        <button
-          id="theme-toggle"
-          class="icon-btn text-gray-300"
-          title="Toggle Theme"
-          aria-label="Toggle light or dark theme"
-        >
-          <i class="fas fa-moon" aria-hidden="true"></i>
-        </button>
-      </div>
-    </header>
 
     <main class="flex-1">
       <div class="chat-container">
